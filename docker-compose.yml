@@ -1,0 +1,94 @@
+version: '3.7'
+services:
+  router:
+    image: traefik:latest
+    container_name: router
+    ports:
+      - 80:80
+      - 443:443 
+    restart: always
+    depends_on:
+      - watchtower
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - ./traefik-acme:/acme
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.web.acme.email=example@example.com"
+      - "--certificatesresolvers.web.acme.storage=/acme/certs.json"
+      - "--certificatesresolvers.web.acme.httpchallenge.entrypoint=web"
+    labels:
+      - "traefik.enable=false"
+      - "com.centurylinklabs.watchtower.scope=proxy"
+  couchdb:
+    image: couchdb:latest
+    container_name: couchdb
+    ports:
+      - 5984:5984
+    restart: always
+    depends_on:
+      - router
+      - watchtower
+    env_file:
+      - ./.env
+    environment:
+      COUCHDB_USER: ${COUCHDB_USER}
+      COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
+    volumes:
+      - ./dbdata:/opt/couchdb/data
+      - ./dbconfig:/opt/couchdb/etc/local.d
+    labels:
+      - "traefik.enable=false"
+      - "com.centurylinklabs.watchtower.scope=proxy"
+  didkit:
+    image: ghcr.io/spruceid/didkit-http:latest
+    container_name: didkit
+    restart: always
+    depends_on:
+      - router
+      - watchtower
+    env_file:
+      - ./.env
+    command: ["--port", "9000", "--host", "0.0.0.0"]
+    labels:
+      - "traefik.enable=false"
+      - "com.centurylinklabs.watchtower.scope=proxy"
+  proxy:
+    image: shihjay2/trustee-proxy 
+    container_name: proxy 
+    links:
+      - couchdb
+    restart: always
+    depends_on:
+      - couchdb
+      - router
+      - watchtower
+    env_file:
+      - ./.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.proxy.loadbalancer.server.port=4000"
+      - "traefik.http.routers.app.entrypoints=web"
+      - "traefik.http.routers.app.rule=Host(`example.com`)"
+      - "traefik.http.middlewares.app-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.app.middlewares=app-https-redirect"
+      - "traefik.http.routers.app-secure.entrypoints=websecure"
+      - "traefik.http.routers.app-secure.rule=Host(`exmaple.com`)"
+      - "traefik.http.routers.app-secure.tls=true"
+      - "traefik.http.routers.app-secure.tls.certresolver=web"
+      - "traefik.http.routers.app-secure.service=app"
+      - "com.centurylinklabs.watchtower.scope=proxy"
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --scope proxy
+    labels:
+      - "traefik.enable=false"
