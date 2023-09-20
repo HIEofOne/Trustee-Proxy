@@ -21,6 +21,7 @@ import hbs from 'hbs'
 import QRCode from 'qrcode'
 import { PassThrough } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
+import { SiweMessage } from 'siwe';
 
 import { createJWT, couchdbDatabase, couchdbInstall, didkitIssue, didkitVerify, determinePath, getNumberOrUndefined, urlFix, verify } from './core.mjs'
 import settings from './settings.mjs'
@@ -98,6 +99,20 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 app.use(express.static(client))
 app.set('view engine', 'hbs')
+
+app.post('/ssx', async(req, res) => {
+  const {message, signature} = req.body
+  try {
+    const siweMessage = new SiweMessage(message)
+    console.log(siweMessage)
+    const status = await siweMessage.verify({signature})
+    console.log(status)
+    res.status(200).send('OK')
+  } catch (e) {
+    console.log(e)
+    res.status(500).send(e)
+  }
+})
 
 app.get('/.well-known/did.json', async(req, res) => {
   const url = new URL(process.env.DOMAIN)
