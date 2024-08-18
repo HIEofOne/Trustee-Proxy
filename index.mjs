@@ -392,8 +392,8 @@ app.get('/jwks', (req, res) => {
 
 app.get('/identifiers/:uri', async(req, res) => {
   const opts = {headers: {'Content-Type': 'application/json'}}
-  const res = await axios.get('http://didkit:9000/identifiers/' + req.params.uri, opts)
-  res.status(200).json(res.data)
+  const result = await axios.get('http://didkit:9000/identifiers/' + req.params.uri, opts)
+  res.status(200).json(result.data)
 })
 
 app.post('/oidc_relay', async(req, res) => {
