@@ -541,6 +541,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
   } else {
     console.log(doc)
     const params = client.callbackParams(req)
+    console.log(params)
     const check = {
       code_verifier: doc.code_verifier,
       state: req.query.state,
