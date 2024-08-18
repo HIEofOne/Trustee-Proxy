@@ -519,8 +519,9 @@ app.get('/oidc_relay_connect', async(req, res) => {
   if (objectPath.has(req, 'query.proxystate')) {
     const code_verifier = generators.codeVerifier()
     const code_challenge = generators.codeChallenge(code_verifier)
+    let url = null
     if (doc.type === 'epic') {
-      var url = client.authorizationUrl({
+      url = client.authorizationUrl({
         scope: scope,
         code_challenge,
         state: req.query.proxystate,
@@ -528,7 +529,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
         code_challenge_method: 'S256'
       })
     } else {
-      var url = client.authorizationUrl({
+      url = client.authorizationUrl({
         scope: scope,
         code_challenge,
         state: req.query.proxystate,
@@ -539,20 +540,19 @@ app.get('/oidc_relay_connect', async(req, res) => {
     await db.put(doc)
     res.redirect(url)
   } else {
-    console.log(doc)
     const params = client.callbackParams(req)
-    console.log(params)
     const check = {
       code_verifier: doc.code_verifier,
       state: req.query.state,
       response_type: 'code'
     }
     try {
+      let tokenSet = null
       if (doc.type === 'epic') {
-        var tokenSet = await client.callback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
+        tokenSet = await client.callback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
         console.log('validated ID Token claims %j', tokenSet.claims())
       } else {
-        var tokenSet = await client.oauthCallback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
+        tokenSet = await client.oauthCallback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
       }
       console.log('received and validated tokens %j', tokenSet)
       objectPath.set(doc, 'access_token', tokenSet.access_token)
