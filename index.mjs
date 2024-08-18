@@ -539,6 +539,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
     await db.put(doc)
     res.redirect(url)
   } else {
+    console.log(doc)
     const params = client.callbackParams(req)
     const check = {
       code_verifier: doc.code_verifier,
