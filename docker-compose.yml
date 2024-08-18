@@ -47,20 +47,22 @@ services:
     image: ghcr.io/spruceid/didkit-http:latest
     container_name: didkit
     restart: always
+    ports:
+      - 3000:3000
     depends_on:
       - router
       - watchtower
     env_file:
       - ./.env
-    command: ["--port", "9000", "--host", "0.0.0.0"]
     labels:
       - "traefik.enable=false"
       - "com.centurylinklabs.watchtower.scope=proxy"
   proxy:
-    image: shihjay2/trustee-proxy 
+    image: shihjay2/trusteeproxy 
     container_name: proxy 
     links:
       - couchdb
+      - didkit
     restart: always
     depends_on:
       - couchdb
@@ -72,6 +74,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=traefik_default"
       - "traefik.http.services.proxy.loadbalancer.server.port=4000"
       - "traefik.http.routers.app.entrypoints=web"
       - "traefik.http.routers.app.rule=Host(`example.com`)"
@@ -88,6 +91,9 @@ services:
     container_name: watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --scope proxy
+    command: --interval 30 --scope proxy --cleanup
     labels:
       - "traefik.enable=false"
+networks:
+  traefik_default:
+    external: true
