@@ -110,13 +110,13 @@ PouchDB.plugin(PouchDBFind)
 
 async function createJWT(iss, payload=null) {
   // aud is audience - base url of this server
-  var keys = await getKeys()
+  const keys = await getKeys()
   if (keys.length === 0) {
-    var pair = await createKeyPair()
+    const pair = await createKeyPair()
     keys.push(pair)
   }
   const rsaPrivateKey = await jose.importJWK(keys[0].privateKey, 'RS256')
-  // const payload_vc = {
+  const payload_vc = {
   //   "vc": {
   //     "@context": [
   //       "https://www.w3.org/2018/credentials/v1",
@@ -142,16 +142,17 @@ async function createJWT(iss, payload=null) {
   //   "_nosh": {
   //     "role": "provider" // provider, patient, support, proxy
   //   }
-  // }
+  }
+  let payload_final = {}
   if (payload !== null) {
-    var payload_final = {
+    payload_final = {
       // ...payload_vc,
       ...payload
     }
   } else {
-    var payload_final = payload_vc
+    payload_final = payload_vc
   }
-  var header = { alg: 'RS256' }
+  const header = { alg: 'RS256' }
   const jwt = await new jose.SignJWT(payload_final)
     .setProtectedHeader(header)
     .setIssuedAt()
@@ -273,7 +274,7 @@ async function didkitIssue(credentialSubject) {
       }
     }
     try {
-      var res = await axios.post('http://didkit:3000/credentials/issue', body, opts)
+      const res = await axios.post('http://didkit:3000/credentials/issue', body, opts)
       console.log(res.data)
       return res.data
     } catch (e) {
@@ -299,7 +300,7 @@ async function didkitVerify(vc) {
       }
     }
     try {
-      var res = await axios.post('http://didkit:3000/credentials/verify', body, opts)
+      const res = await axios.post('http://didkit:3000/credentials/verify', body, opts)
       return res.data
     } catch (e) {
       console.log(e.response.data)
@@ -358,11 +359,11 @@ function getNumberOrUndefined(input) {
 }
 
 async function couchdbConfig(section, key, value) {
-  var opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
+  const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   objectPath.set(opts, 'headers', {'Content-Type': 'application/json'})
-  var data = JSON.stringify(value).replace(/\\/g, "\\\\")
+  const data = JSON.stringify(value).replace(/\\/g, "\\\\")
   try {
-    var res = await axios.put(settings.couchdb_uri + '/_node/_local/_config/' + section + '/' + key, data, opts)
+    const res = await axios.put(settings.couchdb_uri + '/_node/_local/_config/' + section + '/' + key, data, opts)
     return res.data
   } catch (e) {
     console.log(e.response.data)
@@ -378,26 +379,20 @@ async function couchdbDatabase(patient_id='') {
 }
 
 async function couchdbInstall() {
-  var keys = await getKeys()
+  const keys = await getKeys()
   if (keys.length === 0) {
-    var pair = await createKeyPair()
+    const pair = await createKeyPair()
     keys.push(pair)
   }
   const key = await jose.importJWK(keys[0].publicKey)
   const pem = await jose.exportSPKI(key)
-  var result = []
+  const result = []
   const commands = [
-    {section: 'httpd', key: 'enable_cors', value: 'true'},
-    {section: 'cors', key: 'credentials', value: 'true'},
-    {section: 'cors', key: 'headers', value: 'accept, authorization, content-type, origin, referer'},
-    {section: 'cors', key: 'methods', value: 'GET, PUT, POST, HEAD, DELETE'},
-    {section: 'cors', key: 'origins', value: '*'},
-    {section: 'chttpd', key: 'authentication_handlers', value: '{chttpd_auth, cookie_authentication_handler}, {chttpd_auth, jwt_authentication_handler}, {chttpd_auth, default_authentication_handler}'},
     {section: 'jwt_keys', key: 'rsa:_default', value: pem}
   ]
-  for (var command of commands) {
+  for (const command of commands) {
     console.log(command)
-    var a = await couchdbConfig(command.section, command.key, command.value)
+    const a = await couchdbConfig(command.section, command.key, command.value)
     result.push({command: command, result: a})
   }
   await couchdbRestart()
@@ -409,7 +404,7 @@ async function couchdbRestart() {
   var opts = settings.couchdb_auth
   objectPath.set(opts, 'headers', {'Content-Type': 'application/json'})
   try {
-    var res = await axios.post(settings.couchdb_uri + '/_node/_local/_restart', '', opts)
+    const res = await axios.post(settings.couchdb_uri + '/_node/_local/_restart', '', opts)
     objectPath.del(opts, 'headers')
     return res.data
   } catch (e) {
@@ -420,23 +415,24 @@ async function couchdbRestart() {
 
 async function createKeyPair(alg='RS256') {
   const { publicKey, privateKey } = await jose.generateKeyPair(alg)
-  var public_key = await jose.exportJWK(publicKey)
+  const public_key = await jose.exportJWK(publicKey)
   const kid = uuidv4()
   objectPath.set(public_key, 'kid', kid)
   objectPath.set(public_key, 'alg', alg)
-  var private_key = await jose.exportJWK(privateKey)
+  const private_key = await jose.exportJWK(privateKey)
   objectPath.set(private_key, 'kid', kid)
   objectPath.set(private_key, 'alg', alg)
   const did = createDIDKey()
-  var keys = await getKeys()
+  const keys = await getKeys()
+  let doc = {}
   if (keys.length > 0) {
-    var doc = keys[0]
+    doc = keys[0]
     objectPath.set(doc, 'publicKey', public_key)
     objectPath.set(doc, 'privateKey', private_key)
     objectPath.set(doc, 'didKey', did.didKey)
     objectPath.set(doc, 'didJWK', did.didJWK)
   } else {
-    var doc = {_id: kid, publicKey: public_key, privateKey: private_key, didKey: did.didKey, didJWK: did.didJWK}
+    doc = {_id: kid, publicKey: public_key, privateKey: private_key, didKey: did.didKey, didJWK: did.didJWK}
   }
   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'keys', settings.couchdb_auth)
   await db.put(doc)
@@ -525,8 +521,8 @@ function extractHeader({ headers }, header, opts) {
 }
 
 async function getAllKeys() {
-  var keys = []
-  var publicKey = ''
+  const keys = []
+  let publicKey = ''
   // var trustee_key = null
   // Trustee key
   // try {
@@ -544,7 +540,7 @@ async function getAllKeys() {
   const result = await db.find({
     selector: {_id: {"$gte": null}}
   })
-  for (var a in result.docs) {
+  for (const a in result.docs) {
     keys.push(result.docs[a].publicKey)
     if (objectPath.has(result, 'docs.' + a + '.privateKey')) {
       publicKey = result.docs[a].publicKey
@@ -555,7 +551,7 @@ async function getAllKeys() {
 
 async function getKeys() {
   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'keys', settings.couchdb_auth)
-  var result = await db.find({
+  const result = await db.find({
     selector: {_id: {"$gte": null}, privateKey: {"$gte": null}}
   })
   return result.docs
@@ -563,7 +559,7 @@ async function getKeys() {
 
 async function getPIN(patient_id) {
   const db = new PouchDB('pins', {skip_setup: true})
-  var info = await db.info()
+  const info = await db.info()
   if (objectPath.has(info, 'error')) {
     return false
   }
@@ -576,58 +572,8 @@ async function getPIN(patient_id) {
   
 }
 
-async function getUser(email) {
-  await sync('users')
-  var db = new PouchDB('users')
-}
-
-async function gnapInstrospect(jwt, publicKey, location, action) {
-  const params = {
-    "access_token": jwt,
-    "proof": "httpsig",
-    "resource_server": {
-      "key": {
-        "proof": "httpsig",
-        "jwk": publicKey
-      }
-    }
-  }
-  try {
-    var a = await axios.get(urlFix(process.env.TRUSTEE_URL) + '.well-known/gnap-as-rs')
-  } catch (err) {
-    console.log(err)
-    return false
-  }
-  try {
-    var b = await axios.post(a.introspection_endpoint, params)
-  } catch (err) {
-    console.log(err)
-    return false
-  }
-  if (b.active === true) {
-    var i = 0
-    for (var c in b.access) {
-      var d = b.access[c].locations.find(c => c === location)
-      if (d !== undefined) {
-        var e = b.access[c].actions.find(f => f === action)
-        if (e !== undefined) {
-          i++
-        }
-      }
-    }
-    if (i > 0) {
-      return true
-    } else {
-      return false
-    }
-  } else {
-    return false
-  }
-}
-
-
 async function signatureHeader(resource, opts) {
-  var headers = resource.headers
+  const headers = resource.headers
   const parts = opts.components.map((component) => {
     let value
     if (component.startsWith('@')) {
@@ -666,11 +612,11 @@ function urlFix(url) {
 }
 
 async function verify(jwt) {
-  var keys = await getAllKeys()
-  var response = {}
-  var found = false
+  const keys = await getAllKeys()
+  const response = {}
+  let found = false
   if (keys.keys.length > 0) {
-    for (var a in keys.keys) {
+    for (const a in keys.keys) {
       const jwk = await jose.importJWK(keys.keys[a])
       try {
         const { payload, protectedHeader } = await jose.jwtVerify(jwt, jwk)
@@ -686,7 +632,7 @@ async function verify(jwt) {
       }
     }
   } else {
-    objectPath.set(repsonse, 'status', 'noKeys')
+    objectPath.set(response, 'status', 'noKeys')
   }
   return response
 }
@@ -731,4 +677,4 @@ async function verify(jwt) {
 //   }
 // }
 
-export { createJWT, createSigner, couchdbConfig, couchdbDatabase, couchdbInstall, determinePath, didkitIssue, didkitVerify, equals, extractComponent, extractHeader, getKeys, getNumberOrUndefined, getPIN, getUser, signatureHeader, sleep, urlFix, verify }
+export { createJWT, createSigner, couchdbConfig, couchdbDatabase, couchdbInstall, determinePath, didkitIssue, didkitVerify, equals, extractComponent, extractHeader, getKeys, getNumberOrUndefined, getPIN, signatureHeader, sleep, urlFix, verify }

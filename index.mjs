@@ -392,7 +392,7 @@ app.get('/jwks', (req, res) => {
 
 app.get('/identifiers/:uri', async(req, res) => {
   const opts = {headers: {'Content-Type': 'application/json'}}
-  var res = await axios.get('http://didkit:9000/identifiers/' + req.params.uri, opts)
+  const res = await axios.get('http://didkit:9000/identifiers/' + req.params.uri, opts)
   res.status(200).json(res.data)
 })
 
@@ -432,16 +432,17 @@ app.get('/oidc_relay/:state', async(req, res) => {
 app.get('/oidc_relay_connect', async(req, res) => {
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'proxy', opts)
+  let doc = {}
   if (objectPath.has(req, 'query.proxystate')) {
     try {
-      var doc = await db.get('id_' + req.query.proxystate)
+      doc = await db.get('id_' + req.query.proxystate)
     } catch (e) {
       res.status(200).send('Not authorized - state does not exist')
     }
   } else {
     if (objectPath.has(req, 'query.state')) {
       try {
-        var doc = await db.get('id_' + req.query.state)
+        doc = await db.get('id_' + req.query.state)
       } catch (e) {
         res.status(200).send('Not authorized - state does not exist')
       }
@@ -449,6 +450,12 @@ app.get('/oidc_relay_connect', async(req, res) => {
       res.status(200).send('Not authorized - no state given')
     }
   }
+  let client_id = ''
+  let client_secret = ''
+  let scope = ''
+  let base_url = ''
+  let issuer = null
+  let client = null
   if (doc.type === 'epic') {
     if (process.env.OPENEPIC_CLIENT_ID === null) {
       objectPath.set(doc, 'error', 'OpenEpic Client ID is not set')
@@ -460,18 +467,18 @@ app.get('/oidc_relay_connect', async(req, res) => {
       await db.put(doc)
       res.redirect(doc.response_uri)
     }
-    var client_id = process.env.OPENEPIC_CLIENT_ID
+    client_id = process.env.OPENEPIC_CLIENT_ID
     if (doc.fhir_url === 'https://open-ic.epic.com/argonaut/api/FHIR/Argonaut/') {
       if (process.env.OPENEPIC_SANDBOX_CLIENT_ID === null) {
         objectPath.set(doc, 'error', 'OpenEpic Sandbox Client ID is not set')
         await db.put(doc)
         res.redirect(doc.response_uri)
       }
-      var client_id = process.env.OPENEPIC_SANDBOX_CLIENT_ID
+      client_id = process.env.OPENEPIC_SANDBOX_CLIENT_ID
     }
-    var scope = 'openid patient/*.read user/*.* profile launch launch/patient offline_access online_access'
-    var issuer = await Issuer.discover(doc.fhir_url + '.well-known/openid-configuration')
-    var client = new issuer.Client({
+    scope = 'openid patient/*.read user/*.* profile launch launch/patient offline_access online_access'
+    issuer = await Issuer.discover(doc.fhir_url + '.well-known/openid-configuration')
+    client = new issuer.Client({
       client_id: client_id,
       client_secret: '',
       redirect_uris: [urlFix(process.env.DOMAIN) + 'oidc_relay_connect'],
@@ -485,9 +492,9 @@ app.get('/oidc_relay_connect', async(req, res) => {
         await db.put(doc)
         res.redirect(doc.response_uri)
       }
-      var client_id = process.env.CMS_BLUEBUTTON_SANDBOX_CLIENT_ID
-      var client_secret = process.env.CMS_BLUEBUTTON_SANDBOX_CLIENT_SECRET
-      var base_url = 'https://sandbox.bluebutton.cms.gov'
+      client_id = process.env.CMS_BLUEBUTTON_SANDBOX_CLIENT_ID
+      client_secret = process.env.CMS_BLUEBUTTON_SANDBOX_CLIENT_SECRET
+      base_url = 'https://sandbox.bluebutton.cms.gov'
       // var resource_url = base_url + '/v1/fhir/Patient/20140000008325'
     }
     if (doc.type === 'cms_bluebutton') {
@@ -496,13 +503,13 @@ app.get('/oidc_relay_connect', async(req, res) => {
         await db.put(doc)
         res.redirect(doc.response_uri)
       }
-      var client_id = process.env.CMS_BLUEBUTTON_CLIENT_ID
-      var client_secret = process.env.CMS_BLUEBUTTON_CLIENT_SECRET
-      var base_url = 'https://api.bluebutton.cms.gov'
+      client_id = process.env.CMS_BLUEBUTTON_CLIENT_ID
+      client_secret = process.env.CMS_BLUEBUTTON_CLIENT_SECRET
+      base_url = 'https://api.bluebutton.cms.gov'
     }
-    var scope = 'patient/Patient.read patient/ExplanationOfBenefit.read patient/Coverage.read profile'
-    var issuer = await Issuer.discover(base_url + '/.well-known/openid-configuration')
-    var client = new issuer.Client({
+    scope = 'patient/Patient.read patient/ExplanationOfBenefit.read patient/Coverage.read profile'
+    issuer = await Issuer.discover(base_url + '/.well-known/openid-configuration')
+    client = new issuer.Client({
       client_id: client_id,
       client_secret: client_secret,
       redirect_uris: [urlFix(process.env.DOMAIN) + 'oidc_relay_connect'],
@@ -510,10 +517,11 @@ app.get('/oidc_relay_connect', async(req, res) => {
     })
   }
   if (objectPath.has(req, 'query.proxystate')) {
+    let url = null
     const code_verifier = generators.codeVerifier()
     const code_challenge = generators.codeChallenge(code_verifier)
     if (doc.type === 'epic') {
-      var url = client.authorizationUrl({
+      url = client.authorizationUrl({
         scope: scope,
         code_challenge,
         state: req.query.proxystate,
@@ -521,7 +529,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
         code_challenge_method: 'S256'
       })
     } else {
-      var url = client.authorizationUrl({
+      url = client.authorizationUrl({
         scope: scope,
         code_challenge,
         state: req.query.proxystate,
@@ -539,11 +547,12 @@ app.get('/oidc_relay_connect', async(req, res) => {
       response_type: 'code'
     }
     try {
+      let tokenSet = null
       if (doc.type === 'epic') {
-        var tokenSet = await client.callback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
+        tokenSet = await client.callback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
         console.log('validated ID Token claims %j', tokenSet.claims())
       } else {
-        var tokenSet = await client.oauthCallback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
+        tokenSet = await client.oauthCallback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
       }
       console.log('received and validated tokens %j', tokenSet)
       objectPath.set(doc, 'access_token', tokenSet.access_token)
@@ -586,12 +595,12 @@ app.get('/start', async(req, res) => {
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   objectPath.set(opts, 'skip_setup', true)
   const check = new PouchDB(urlFix(settings.couchdb_uri) + 'proxy', opts)
-  var info = await check.info()
+  const info = await check.info()
   if (objectPath.has(info, 'error')) {
     if (info.error == 'not_found') {
       await couchdbInstall()
-      var b = false
-      var c = 0
+      let b = false
+      let c = 0
       while (!b && c < 40) {
         b = await isReachable(settings.couchdb_uri)
         if (b || c === 39) {

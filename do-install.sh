@@ -41,4 +41,7 @@ DID=`/usr/bin/docker run ghcr.io/spruceid/didkit-cli:latest key-to-did key -j $K
 DOC=`/usr/bin/docker run ghcr.io/spruceid/didkit-cli:latest did-resolve $DID`
 curl -X PUT http://admin:$COUCHDB_PASSWORD@localhost:5984/didkit/did_doc -d "$DOC"
 sed -i '/^DIDKIT_HTTP_ISSUER_KEYS=/s/=.*/='"[$KEY]"'/' ./.env
+mkdir dbconfig
+cd dbconfig
+curl -O https://raw.githubusercontent.com/HIEofOne/Trustee-Proxy/master/docker.ini
 exit 0
