@@ -468,7 +468,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
       res.redirect(doc.response_uri)
     }
     client_id = process.env.OPENEPIC_CLIENT_ID
-    if (doc.fhir_url === 'https://open-ic.epic.com/argonaut/api/FHIR/Argonaut/') {
+    if (doc.fhir_url === 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/') {
       if (process.env.OPENEPIC_SANDBOX_CLIENT_ID === null) {
         objectPath.set(doc, 'error', 'OpenEpic Sandbox Client ID is not set')
         await db.put(doc)
