@@ -337,7 +337,7 @@ app.get('/doximity_redirect', async(req, res) => {
       expectedState: req.query.state
     }
     try {
-      const tokenSet = oidcclient.authorizationCodeGrant(
+      const tokenSet = await oidcclient.authorizationCodeGrant(
         config,
         new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
         check
@@ -561,7 +561,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
     try {
       let tokenSet = null
       if (doc.type === 'epic') {
-        tokenSet = oidcclient.authorizationCodeGrant(
+        tokenSet = await oidcclient.authorizationCodeGrant(
           config,
           new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
           check
@@ -570,7 +570,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
         console.log(tokenSet)
         console.log('validated ID Token claims %j', tokenSet.claims())
       } else {
-        tokenSet = oidcclient.authorizationCodeGrant(
+        tokenSet = await oidcclient.authorizationCodeGrant(
           config,
           new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
           check
