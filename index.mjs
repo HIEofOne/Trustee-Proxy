@@ -567,6 +567,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
           check
         )
         // tokenSet = await oidcclient.callback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
+        console.log(tokenSet)
         console.log('validated ID Token claims %j', tokenSet.claims())
       } else {
         tokenSet = oidcclient.authorizationCodeGrant(
