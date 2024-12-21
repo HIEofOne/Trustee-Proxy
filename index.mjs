@@ -18,7 +18,7 @@ import PouchDB from 'pouchdb'
 import PouchDBFind from 'pouchdb-find'
 import streams from 'memory-streams'
 PouchDB.plugin(PouchDBFind)
-import hbs from 'hbs'
+// import hbs from 'hbs'
 import QRCode from 'qrcode'
 import { PassThrough } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
@@ -27,9 +27,9 @@ import { SiweMessage } from 'siwe';
 import { createJWT, couchdbDatabase, couchdbInstall, didkitIssue, didkitVerify, determinePath, getNumberOrUndefined, urlFix, verify } from './core.mjs'
 import settings from './settings.mjs'
 const app = express()
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const client = __dirname + '/public/'
+// const __filename = fileURLToPath(import.meta.url)
+// const __dirname = path.dirname(__filename)
+// // const client = __dirname + '/public/'
 
 const vcIssuerConf = {
   "issuer": process.env.DOMAIN,
