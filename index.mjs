@@ -563,7 +563,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
       if (doc.type === 'epic') {
         tokenSet = oidcclient.authorizationCodeGrant(
           config,
-          urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
+          new URL(urlFix(process.env.DOMAIN) + 'oidc_relay_connect'),
           check
         )
         // tokenSet = await oidcclient.callback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
@@ -571,7 +571,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
       } else {
         tokenSet = oidcclient.authorizationCodeGrant(
           config,
-          urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
+          new URL(urlFix(process.env.DOMAIN) + 'oidc_relay_connect'),
           check
         )
         // tokenSet = await oidcclient.oauthCallback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
