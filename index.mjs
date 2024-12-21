@@ -10,10 +10,10 @@ import * as jose from 'jose'
 import morgan from 'morgan'
 import { nanoid } from 'nanoid'
 import objectPath from 'object-path'
-// import path from 'path'
-// import {fileURLToPath} from 'url'
+import path from 'path'
+import {fileURLToPath} from 'url'
 // import { Issuer, generators } from 'openid-client'
-import * as client from 'openid-client'
+import * as oidcclient from 'openid-client'
 import PouchDB from 'pouchdb'
 import PouchDBFind from 'pouchdb-find'
 import streams from 'memory-streams'
@@ -27,9 +27,9 @@ import { SiweMessage } from 'siwe';
 import { createJWT, couchdbDatabase, couchdbInstall, didkitIssue, didkitVerify, determinePath, getNumberOrUndefined, urlFix, verify } from './core.mjs'
 import settings from './settings.mjs'
 const app = express()
-// const __filename = fileURLToPath(import.meta.url)
-// const __dirname = path.dirname(__filename)
-// // const client = __dirname + '/public/'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const client = __dirname + '/public/'
 
 const vcIssuerConf = {
   "issuer": process.env.DOMAIN,
@@ -293,13 +293,13 @@ app.post('/did_vc_verify', async (req, res) => {
 })
 
 app.get('/doximity', async(req, res) => {
-  const config = await client.discovery(
+  const config = await oidcclient.discovery(
     'https://auth.doximity.com/.well-known/oauth-authorization-server',
     process.env.DOXIMITY_CLIENT_ID,
     process.env.DOXIMITY_CLIENT_SECRET
   )
-  const code_verifier = client.randomPKCECodeVerifier()
-  const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
+  const code_verifier = oidcclient.randomPKCECodeVerifier()
+  const code_challenge = await oidcclient.calculatePKCECodeChallenge(code_verifier)
   const state = await nanoid()
   const parameters = {
     redirect_uri: urlFix(process.env.DOMAIN) + 'doximity_redirect',
@@ -308,7 +308,7 @@ app.get('/doximity', async(req, res) => {
     state: state,
     code_challenge_method: 'S256'
   }
-  const url = client.buildAuthorizationUrl(config, parameters)
+  const url = oidcclient.buildAuthorizationUrl(config, parameters)
   const doc = {
     _id: 'id_' + state,
     code_verifier: code_verifier,
@@ -322,7 +322,7 @@ app.get('/doximity', async(req, res) => {
 })
 
 app.get('/doximity_redirect', async(req, res) => {
-  const config = await client.discovery(
+  const config = await oidcclient.discovery(
     'https://auth.doximity.com/.well-known/oauth-authorization-server',
     process.env.DOXIMITY_CLIENT_ID,
     process.env.DOXIMITY_CLIENT_SECRET
@@ -336,7 +336,7 @@ app.get('/doximity_redirect', async(req, res) => {
       expectedState: req.query.state
     }
     try {
-      const tokenSet = client.authorizationCodeGrant(
+      const tokenSet = oidcclient.authorizationCodeGrant(
         config,
         urlFix(process.env.DOMAIN) + 'doximity_redirect',
         check
@@ -478,11 +478,11 @@ app.get('/oidc_relay_connect', async(req, res) => {
     }
     scope = 'openid patient/*.read user/*.* profile launch launch/patient offline_access online_access'
     try {
-      config = await client.discovery(
+      config = await oidcclient.discovery(
         doc.fhir_url + '.well-known/openid-configuration',
         client_id,
         '',
-        client.None()
+        oidcclient.None()
       )
     } catch (e) {
       objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
@@ -513,7 +513,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
     }
     scope = 'patient/Patient.read patient/ExplanationOfBenefit.read patient/Coverage.read profile'
     try {
-      config = await client.discovery(
+      config = await oidcclient.discovery(
         base_url + '/.well-known/openid-configuration',
         client_id,
         client_secret
@@ -525,8 +525,8 @@ app.get('/oidc_relay_connect', async(req, res) => {
     }
   }
   if (objectPath.has(req, 'query.proxystate')) {
-    const code_verifier = client.randomPKCECodeVerifier()
-    const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
+    const code_verifier = oidcclient.randomPKCECodeVerifier()
+    const code_challenge = await oidcclient.calculatePKCECodeChallenge(code_verifier)
     let url = null
     let parameters = {}
     if (doc.type === 'epic') {
@@ -547,7 +547,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
         code_challenge_method: 'S256'
       }
     }
-    url = client.buildAuthorizationUrl(config, parameters)
+    url = oidcclient.buildAuthorizationUrl(config, parameters)
     objectPath.set(doc, 'code_verifier', code_verifier)
     await db.put(doc)
     res.redirect(url)
@@ -559,20 +559,20 @@ app.get('/oidc_relay_connect', async(req, res) => {
     try {
       let tokenSet = null
       if (doc.type === 'epic') {
-        tokenSet = client.authorizationCodeGrant(
+        tokenSet = oidcclient.authorizationCodeGrant(
           config,
           urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
           check
         )
-        // tokenSet = await client.callback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
+        // tokenSet = await oidcclient.callback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
         console.log('validated ID Token claims %j', tokenSet.claims())
       } else {
-        tokenSet = client.authorizationCodeGrant(
+        tokenSet = oidcclient.authorizationCodeGrant(
           config,
           urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
           check
         )
-        // tokenSet = await client.oauthCallback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
+        // tokenSet = await oidcclient.oauthCallback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
       }
       console.log('received and validated tokens %j', tokenSet)
       objectPath.set(doc, 'access_token', tokenSet.access_token)
