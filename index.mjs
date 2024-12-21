@@ -294,7 +294,7 @@ app.post('/did_vc_verify', async (req, res) => {
 
 app.get('/doximity', async(req, res) => {
   const config = await oidcclient.discovery(
-    'https://auth.doximity.com/.well-known/oauth-authorization-server',
+    new URL('https://auth.doximity.com/.well-known/oauth-authorization-server'),
     process.env.DOXIMITY_CLIENT_ID,
     process.env.DOXIMITY_CLIENT_SECRET
   )
@@ -323,7 +323,7 @@ app.get('/doximity', async(req, res) => {
 
 app.get('/doximity_redirect', async(req, res) => {
   const config = await oidcclient.discovery(
-    'https://auth.doximity.com/.well-known/oauth-authorization-server',
+    new URL('https://auth.doximity.com/.well-known/oauth-authorization-server'),
     process.env.DOXIMITY_CLIENT_ID,
     process.env.DOXIMITY_CLIENT_SECRET
   )
@@ -479,7 +479,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
     scope = 'openid patient/*.read user/*.* profile launch launch/patient offline_access online_access'
     try {
       config = await oidcclient.discovery(
-        doc.fhir_url + '.well-known/openid-configuration',
+        new URL(doc.fhir_url + '.well-known/openid-configuration'),
         client_id,
         '',
         oidcclient.None()
@@ -514,7 +514,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
     scope = 'patient/Patient.read patient/ExplanationOfBenefit.read patient/Coverage.read profile'
     try {
       config = await oidcclient.discovery(
-        base_url + '/.well-known/openid-configuration',
+        new URL(base_url + '/.well-known/openid-configuration'),
         client_id,
         client_secret
       )
