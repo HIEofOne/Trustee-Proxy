@@ -316,10 +316,10 @@ app.get('/doximity', async(req, res) => {
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'doximity', opts)
   await db.put(doc)
-  console.log(url)
-  const url_fix = url.replaceAll('profile%3A', 'profile:').replaceAll('read%3A', 'read:')
-  console.log(url_fix)
-  res.redirect(url_fix)
+  // console.log(url)
+  // const url_fix = url.replaceAll('profile%3A', 'profile:').replaceAll('read%3A', 'read:')
+  // console.log(url_fix)
+  res.redirect(url)
 })
 
 app.get('/doximity_redirect', async(req, res) => {
@@ -339,7 +339,7 @@ app.get('/doximity_redirect', async(req, res) => {
     try {
       const tokenSet = oidcclient.authorizationCodeGrant(
         config,
-        urlFix(process.env.DOMAIN) + 'doximity_redirect',
+        new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
         check
       )
       console.log('received and validated tokens %j', tokenSet)
@@ -563,7 +563,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
       if (doc.type === 'epic') {
         tokenSet = oidcclient.authorizationCodeGrant(
           config,
-          new URL(urlFix(process.env.DOMAIN) + 'oidc_relay_connect'),
+          new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
           check
         )
         // tokenSet = await oidcclient.callback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
@@ -571,7 +571,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
       } else {
         tokenSet = oidcclient.authorizationCodeGrant(
           config,
-          new URL(urlFix(process.env.DOMAIN) + 'oidc_relay_connect'),
+          new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
           check
         )
         // tokenSet = await oidcclient.oauthCallback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
