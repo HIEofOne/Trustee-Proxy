@@ -316,6 +316,7 @@ app.get('/doximity', async(req, res) => {
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'doximity', opts)
   await db.put(doc)
+  console.log(url)
   const url_fix = url.replaceAll('profile%3A', 'profile:').replaceAll('read%3A', 'read:')
   console.log(url_fix)
   res.redirect(url_fix)
