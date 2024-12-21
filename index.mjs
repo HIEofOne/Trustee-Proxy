@@ -12,13 +12,11 @@ import { nanoid } from 'nanoid'
 import objectPath from 'object-path'
 import path from 'path'
 import {fileURLToPath} from 'url'
-// import { Issuer, generators } from 'openid-client'
 import * as oidcclient from 'openid-client'
 import PouchDB from 'pouchdb'
 import PouchDBFind from 'pouchdb-find'
 import streams from 'memory-streams'
 PouchDB.plugin(PouchDBFind)
-// import hbs from 'hbs'
 import QRCode from 'qrcode'
 import { PassThrough } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
@@ -566,8 +564,6 @@ app.get('/oidc_relay_connect', async(req, res) => {
           new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
           check
         )
-        // tokenSet = await oidcclient.callback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
-        console.log(tokenSet)
         console.log('validated ID Token claims %j', tokenSet.claims())
       } else {
         tokenSet = await oidcclient.authorizationCodeGrant(
@@ -575,7 +571,6 @@ app.get('/oidc_relay_connect', async(req, res) => {
           new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
           check
         )
-        // tokenSet = await oidcclient.oauthCallback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
       }
       console.log('received and validated tokens %j', tokenSet)
       objectPath.set(doc, 'access_token', tokenSet.access_token)
