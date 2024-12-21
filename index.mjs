@@ -547,6 +547,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
         code_challenge_method: 'S256'
       }
     }
+    console.log(config)
     url = oidcclient.buildAuthorizationUrl(config, parameters)
     objectPath.set(doc, 'code_verifier', code_verifier)
     await db.put(doc)
