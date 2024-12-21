@@ -477,14 +477,20 @@ app.get('/oidc_relay_connect', async(req, res) => {
       client_id = process.env.OPENEPIC_SANDBOX_CLIENT_ID
     }
     scope = 'openid patient/*.read user/*.* profile launch launch/patient offline_access online_access'
-    issuer = await Issuer.discover(doc.fhir_url + '.well-known/openid-configuration')
-    client = new issuer.Client({
-      client_id: client_id,
-      client_secret: '',
-      redirect_uris: [urlFix(process.env.DOMAIN) + 'oidc_relay_connect'],
-      response_types: ['code'],
-      token_endpoint_auth_method: 'none'
-    })
+      try {
+      issuer = await Issuer.discover(doc.fhir_url + '.well-known/openid-configuration')
+      client = new issuer.Client({
+        client_id: client_id,
+        client_secret: '',
+        redirect_uris: [urlFix(process.env.DOMAIN) + 'oidc_relay_connect'],
+        response_types: ['code'],
+        token_endpoint_auth_method: 'none'
+      })
+    } catch (e) {
+      objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
+      await db.put(doc)
+      res.redirect(doc.response_uri)
+    }
   } else {
     if (doc.type === 'cms_bluebutton_sandbox') {
       if (process.env.CMS_BLUEBUTTON_SANDBOX_CLIENT_ID === null) {
@@ -508,13 +514,19 @@ app.get('/oidc_relay_connect', async(req, res) => {
       base_url = 'https://api.bluebutton.cms.gov'
     }
     scope = 'patient/Patient.read patient/ExplanationOfBenefit.read patient/Coverage.read profile'
-    issuer = await Issuer.discover(base_url + '/.well-known/openid-configuration')
-    client = new issuer.Client({
-      client_id: client_id,
-      client_secret: client_secret,
-      redirect_uris: [urlFix(process.env.DOMAIN) + 'oidc_relay_connect'],
-      response_types: ['code']
-    })
+    try {
+      issuer = await Issuer.discover(base_url + '/.well-known/openid-configuration')
+      client = new issuer.Client({
+        client_id: client_id,
+        client_secret: client_secret,
+        redirect_uris: [urlFix(process.env.DOMAIN) + 'oidc_relay_connect'],
+        response_types: ['code']
+      })
+    } catch (e) {
+      objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
+      await db.put(doc)
+      res.redirect(doc.response_uri)
+    }
   }
   if (objectPath.has(req, 'query.proxystate')) {
     const code_verifier = generators.codeVerifier()
