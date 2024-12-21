@@ -12,7 +12,8 @@ import { nanoid } from 'nanoid'
 import objectPath from 'object-path'
 import path from 'path'
 import {fileURLToPath} from 'url'
-import { Issuer, generators } from 'openid-client'
+// import { Issuer, generators } from 'openid-client'
+import * as client from 'openid-client'
 import PouchDB from 'pouchdb'
 import PouchDBFind from 'pouchdb-find'
 import streams from 'memory-streams'
@@ -292,22 +293,22 @@ app.post('/did_vc_verify', async (req, res) => {
 })
 
 app.get('/doximity', async(req, res) => {
-  const issuer  = await Issuer.discover('https://auth.doximity.com/.well-known/oauth-authorization-server')
-  const client = new issuer.Client({
-    client_id: process.env.DOXIMITY_CLIENT_ID,
-    client_secret: process.env.DOXIMITY_CLIENT_SECRET,
-    redirect_uris: [urlFix(process.env.DOMAIN) + 'doximity_redirect'],
-    response_types: ['code']
-  })
-  const code_verifier = generators.codeVerifier()
-  const code_challenge = generators.codeChallenge(code_verifier)
+  const config = await client.discovery(
+    'https://auth.doximity.com/.well-known/oauth-authorization-server',
+    process.env.DOXIMITY_CLIENT_ID,
+    process.env.DOXIMITY_CLIENT_SECRET
+  )
+  const code_verifier = client.randomPKCECodeVerifier()
+  const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
   const state = await nanoid()
-  const url = client.authorizationUrl({
+  const parameters = {
+    redirect_uri: urlFix(process.env.DOMAIN) + 'doximity_redirect',
     scope: 'openid basic',
-    code_challenge,
+    code_challenge: code_challenge,
     state: state,
-    code_challenge_method: 'S256',
-  })
+    code_challenge_method: 'S256'
+  }
+  const url = client.buildAuthorizationUrl(config, parameters)
   const doc = {
     _id: 'id_' + state,
     code_verifier: code_verifier,
@@ -321,25 +322,25 @@ app.get('/doximity', async(req, res) => {
 })
 
 app.get('/doximity_redirect', async(req, res) => {
-  const issuer  = await Issuer.discover('https://auth.doximity.com/.well-known/oauth-authorization-server')
-  const client = new issuer.Client({
-    client_id: process.env.DOXIMITY_CLIENT_ID,
-    client_secret: process.env.DOXIMITY_CLIENT_SECRET,
-    redirect_uris: [urlFix(process.env.DOMAIN) + 'doximity_redirect'],
-    response_types: ['code']
-  })
+  const config = await client.discovery(
+    'https://auth.doximity.com/.well-known/oauth-authorization-server',
+    process.env.DOXIMITY_CLIENT_ID,
+    process.env.DOXIMITY_CLIENT_SECRET
+  )
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   try {
     const db = new PouchDB(urlFix(settings.couchdb_uri) + 'doximity', opts)
     const db_result = await db.get('id_' + req.query.state)
-    const params = client.callbackParams(req)
     const check = {
-      code_verifier: db_result.code_verifier,
-      state: req.query.state,
-      response_type: 'code'
+      pkceCodeVerifier: db_result.code_verifier,
+      expectedState: req.query.state
     }
     try {
-      const tokenSet = await client.callback(urlFix(process.env.DOMAIN) + 'doximity_redirect', params, check)
+      const tokenSet = client.authorizationCodeGrant(
+        config,
+        urlFix(process.env.DOMAIN) + 'doximity_redirect',
+        check
+      )
       console.log('received and validated tokens %j', tokenSet)
       console.log('validated ID Token claims %j', tokenSet.claims())
       const opts1 = {headers: {Authorization: 'Bearer ' + tokenSet.access_token, Accept: 'application/json'}}
@@ -454,8 +455,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
   let client_secret = ''
   let scope = ''
   let base_url = ''
-  let issuer = null
-  let client = null
+  let config = null
   if (doc.type === 'epic') {
     if (process.env.OPENEPIC_CLIENT_ID === null) {
       objectPath.set(doc, 'error', 'OpenEpic Client ID is not set')
@@ -477,15 +477,13 @@ app.get('/oidc_relay_connect', async(req, res) => {
       client_id = process.env.OPENEPIC_SANDBOX_CLIENT_ID
     }
     scope = 'openid patient/*.read user/*.* profile launch launch/patient offline_access online_access'
-      try {
-      issuer = await Issuer.discover(doc.fhir_url + '.well-known/openid-configuration')
-      client = new issuer.Client({
-        client_id: client_id,
-        client_secret: '',
-        redirect_uris: [urlFix(process.env.DOMAIN) + 'oidc_relay_connect'],
-        response_types: ['code'],
-        token_endpoint_auth_method: 'none'
-      })
+    try {
+      config = await client.discovery(
+        doc.fhir_url + '.well-known/openid-configuration',
+        client_id,
+        '',
+        client.None()
+      )
     } catch (e) {
       objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
       await db.put(doc)
@@ -515,13 +513,11 @@ app.get('/oidc_relay_connect', async(req, res) => {
     }
     scope = 'patient/Patient.read patient/ExplanationOfBenefit.read patient/Coverage.read profile'
     try {
-      issuer = await Issuer.discover(base_url + '/.well-known/openid-configuration')
-      client = new issuer.Client({
-        client_id: client_id,
-        client_secret: client_secret,
-        redirect_uris: [urlFix(process.env.DOMAIN) + 'oidc_relay_connect'],
-        response_types: ['code']
-      })
+      config = await client.discovery(
+        base_url + '/.well-known/openid-configuration',
+        client_id,
+        client_secret
+      )
     } catch (e) {
       objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
       await db.put(doc)
@@ -529,42 +525,54 @@ app.get('/oidc_relay_connect', async(req, res) => {
     }
   }
   if (objectPath.has(req, 'query.proxystate')) {
-    const code_verifier = generators.codeVerifier()
-    const code_challenge = generators.codeChallenge(code_verifier)
+    const code_verifier = client.randomPKCECodeVerifier()
+    const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
     let url = null
+    let parameters = {}
     if (doc.type === 'epic') {
-      url = client.authorizationUrl({
+      parameters = {
+        redirect_uri: urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
         scope: scope,
-        code_challenge,
+        code_challenge: code_challenge,
         state: req.query.proxystate,
         aud: doc.fhir_url,
         code_challenge_method: 'S256'
-      })
+      }
     } else {
-      url = client.authorizationUrl({
+      parameters = {
+        redirect_uri: urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
         scope: scope,
-        code_challenge,
+        code_challenge: code_challenge,
         state: req.query.proxystate,
         code_challenge_method: 'S256'
-      })
+      }
     }
+    url = client.buildAuthorizationUrl(config, parameters)
     objectPath.set(doc, 'code_verifier', code_verifier)
     await db.put(doc)
     res.redirect(url)
   } else {
-    const params = client.callbackParams(req)
     const check = {
-      code_verifier: doc.code_verifier,
-      state: req.query.state,
-      response_type: 'code'
+      pkceCodeVerifier: doc.code_verifier,
+      expectedState: req.query.state
     }
     try {
       let tokenSet = null
       if (doc.type === 'epic') {
-        tokenSet = await client.callback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
+        tokenSet = client.authorizationCodeGrant(
+          config,
+          urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
+          check
+        )
+        // tokenSet = await client.callback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
         console.log('validated ID Token claims %j', tokenSet.claims())
       } else {
-        tokenSet = await client.oauthCallback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
+        tokenSet = client.authorizationCodeGrant(
+          config,
+          urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
+          check
+        )
+        // tokenSet = await client.oauthCallback(urlFix(process.env.DOMAIN) + 'oidc_relay_connect', params, check)
       }
       console.log('received and validated tokens %j', tokenSet)
       objectPath.set(doc, 'access_token', tokenSet.access_token)
