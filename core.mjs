@@ -267,11 +267,11 @@ async function didkitIssue(credentialSubject) {
         "issuanceDate": moment().format('YYYY-MM-DDTHH:mm:ss.SSSZ'),
         "credentialSubject": credentialSubject
       },
-      "options": {
-        "verificationMethod": result.assertionMethod[0],
-        "proofPurpose": "assertionMethod",
-        "proofFormat": "jwt"
-      }
+      // "options": {
+      //   "verificationMethod": result.assertionMethod[0],
+      //   "proofPurpose": "assertionMethod",
+      //   "proofFormat": "jwt"
+      // }
     }
     try {
       const res = await axios.post('http://didkit:3000/credentials/issue', body, opts)
