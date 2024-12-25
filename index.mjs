@@ -30,12 +30,12 @@ const __dirname = path.dirname(__filename)
 const client = __dirname + '/public/'
 
 const vcIssuerConf = {
-  "issuer": process.env.DOMAIN,
+  "credential_issuer": process.env.DOMAIN,
   "credential_endpoint": process.env.DOMAIN + "/credential",
   "token_endpoint": process.env.DOMAIN + "/token",
   "jwks_uri": process.env.DOMAIN + "/jwks",
   "grant_types_supported": ["urn:ietf:params:oauth:grant-type:pre-authorized_code"],
-  "credentials_supported": {
+  "credential_configurations_supported": {
     "OpenBadgeCredential": {
       "formats": {
         "jwt_vc": {
@@ -211,7 +211,7 @@ app.post('/credential', async(req, res) => {
                       console.log('no aud in proof')
                       res.status(400).json({error: 'invalid_request'})
                     } else {
-                      if (objectPath.get(payload, 'aud') !== vcIssuerConf.issuer) {
+                      if (objectPath.get(payload, 'aud') !== vcIssuerConf.credential_issuer) {
                         console.log('aud does not match issuer')
                         res.status(400).json({error: 'invalid_request'})
                       } else {
@@ -366,7 +366,7 @@ app.get('/doximity_redirect', async(req, res) => {
         objectPath.set(vc_doc, '_id', preauth_code)
         objectPath.set(vc_doc, 'timestamp', Date().now)
         await vc_db.put(vc_doc)
-        const uri = 'issuer=' + encodeURIComponent(vcIssuerConf.issuer) + '&credential_type=NPICredential&pre-authorized_code=' + preauth_code + '&user_pin_required=false'
+        const uri = 'issuer=' + encodeURIComponent(vcIssuerConf.credential_issuer) + '&credential_type=NPICredential&pre-authorized_code=' + preauth_code + '&user_pin_required=false'
         const vc = {
           uri: 'openid-initiate-issuance://?' + uri,
           uri_enc: uri
@@ -663,7 +663,7 @@ app.post('/token', async(req, res) => {
           const payload = {
             ...(preAuthorizedCode && { preAuthorizedCode })
           }
-          const access_token = await createJWT(vcIssuerConf.issuer, payload)
+          const access_token = await createJWT(vcIssuerConf.credential_issuer, payload)
           const interval = getNumberOrUndefined(process.env.INTERVAL) ?? 300000
           const c_nonce = uuidv4()
           objectPath.set(result, 'c_nonce', c_nonce)
