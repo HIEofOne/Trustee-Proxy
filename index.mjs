@@ -289,16 +289,15 @@ app.get('/credential_offer/:offer_reference', async(req, res) => {
   const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
   const result = await vc_db.find({selector: {'offer_reference': {$eq: req.params.offer_reference}}})
   if (result.docs.length > 0) {
+    console.log(result.docs[0])
     const response = {
       "credential_issuer": vcIssuerConf.credential_issuer,
       "credential_configuration_ids": [
-        "NPICredential",
-        // "OpenBadgeCredential"
+        result.docs[0].credential_type
       ],
       "grants": {
         "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
-          "pre-authorized_code": result.docs[0]._id,
-          "tx_code": {}
+          "pre-authorized_code": result.docs[0]._id
         }
       }
     }
@@ -426,6 +425,7 @@ app.get('/doximity_redirect', async(req, res) => {
         objectPath.set(vc_doc, '_id', preauth_code)
         objectPath.set(vc_doc, 'offer_reference', offer_reference)
         objectPath.set(vc_doc, 'timestamp', Date().now)
+        objectPath.set(vc_doc, 'credential_type', 'NPICredential')
         await vc_db.put(vc_doc)
         const uri = 'credential_offer_uri=' + encodeURIComponent(process.env.DOMAIN + "/credential_offer/" + offer_reference)
         // const uri = 'issuer=' + encodeURIComponent(vcIssuerConf.credential_issuer) + '&credential_type=NPICredential&pre-authorized_code=' + preauth_code + '&user_pin_required=false'
