@@ -77,6 +77,29 @@ header p{
   width: 200px;
 }
 
+.otp {
+  height: 100vh;
+  margin: 0;
+  display: grid;
+  place-items: center;
+}
+
+[autocomplete="one-time-code"] {
+  --magic-number: 100px;
+  background-image: url("https://assets.codepen.io/3/rounded-rectangle.svg");
+  background-size: var(--magic-number);
+  background-repeat: repeat-x;
+  border: 0;
+  height: var(--magic-number);
+  width: calc(4 * var(--magic-number));
+  font-size: calc(0.6 * var(--magic-number));
+  font-family: monospace;
+  letter-spacing: calc(0.64 * var(--magic-number));
+  padding-inline-start: calc(0.3 * var(--magic-number));
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
 @media (max-width: 430px){
   .wrapper{
     height: 510px;

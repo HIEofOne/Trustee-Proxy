@@ -18,6 +18,9 @@
       <div class="qr-code">
         <img src="/qr/{{ vc.uri_enc }}" alt="qr-code">
       </div>
+      <div class="otp">
+        <input required type="text" autocomplete="one-time-code" inputmode="numeric" maxlength="4" pattern="\d{4}" value="{{ vc.tx_code }}">
+      </div>
     </div>
     <script src="/script.js"></script>
   </body>

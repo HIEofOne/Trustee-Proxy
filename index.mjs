@@ -297,7 +297,12 @@ app.get('/credential_offer/:offer_reference', async(req, res) => {
       ],
       "grants": {
         "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
-          "pre-authorized_code": result.docs[0]._id
+          "pre-authorized_code": result.docs[0]._id,
+          "tx_code": {
+            "length": 4,
+            "input_mode": numeric,
+            "description": "Please provide the one-time code"
+          }
         }
       }
     }
@@ -338,10 +343,10 @@ app.get('/did_generate', async(req, res) => {
   }
 })
 
-app.get('/did_vc_issue', async(req, res) => {
-  const ret = await didkitIssue()
-  res.status(200).json(ret)
-})
+// app.get('/did_vc_issue', async(req, res) => {
+//   const ret = await didkitIssue()
+//   res.status(200).json(ret)
+// })
 
 app.post('/did_vc_verify', async (req, res) => {
   const ret = await didkitVerify(req.body.jwt)
@@ -419,20 +424,24 @@ app.get('/doximity_redirect', async(req, res) => {
         }
         const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
         await vc_db.info()
-        const vc_doc = await didkitIssue(credentialSubject)
+        const vc_doc = await didkitIssue(credentialSubject, 'NPICredential')
         const preauth_code = uuidv4()
         const offer_reference = uuidv4()
         objectPath.set(vc_doc, '_id', preauth_code)
         objectPath.set(vc_doc, 'offer_reference', offer_reference)
         objectPath.set(vc_doc, 'timestamp', Date().now)
         objectPath.set(vc_doc, 'credential_type', 'NPICredential')
+        const randomNum = Math.random() * 9000
+        const tx_code = Math.floor(1000 + randomNum)
+        objectPath.set(vc_doc, 'tx_code', tx_code)
         await vc_db.put(vc_doc)
         const uri = 'credential_offer_uri=' + encodeURIComponent(process.env.DOMAIN + "/credential_offer/" + offer_reference)
         // const uri = 'issuer=' + encodeURIComponent(vcIssuerConf.credential_issuer) + '&credential_type=NPICredential&pre-authorized_code=' + preauth_code + '&user_pin_required=false'
         const vc = {
           uri: 'openid-credential-offer://?' + uri,
           // uri: 'openid-initiate-issuance://?' + uri,
-          uri_enc: uri
+          uri_enc: uri,
+          tx_code: tx_code
         }
         res.render('index.hbs', {vc: vc})
       } catch (e) {
@@ -709,48 +718,49 @@ app.post('/token', async(req, res) => {
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
   if (req.body.grant_type === 'urn:ietf:params:oauth:grant-type:pre-authorized_code') {
-    if (!objectPath.has(req, 'body.user_pin')) {
-      try {
-        const result = await vc_db.get(objectPath.get(req, 'body.pre-authorized_code'))
-        const preauth_code_duration = getNumberOrUndefined(process.env.PRE_AUTHORIZED_CODE_EXPIRATION_DURATION) ?? 300000
-        const comp_timestamp = result.timestamp + preauth_code_duration
-        if (Date.now() >= comp_timestamp) {
-          console.log('preauth code expired')
+    try {
+      const result = await vc_db.get(objectPath.get(req, 'body.pre-authorized_code'))
+      const preauth_code_duration = getNumberOrUndefined(process.env.PRE_AUTHORIZED_CODE_EXPIRATION_DURATION) ?? 300000
+      const comp_timestamp = result.timestamp + preauth_code_duration
+      if (objectPath.has(req, 'body.tx_code')) {
+        if (objectPath.get(req, 'body.tx_code') !== result.tx_code) {
+          console.log('tx_code does not match')
           res.status(400).json({error: 'invalid_grant'})
-        } else {
-          res.set({
-            'Cache-Control': 'no-store',
-            Pragma: 'no-cache',
-          })
-          const preAuthorizedCode = result._id
-          const payload = {
-            ...(preAuthorizedCode && { preAuthorizedCode })
-          }
-          const access_token = await createJWT(vcIssuerConf.credential_issuer, payload)
-          const interval = getNumberOrUndefined(process.env.INTERVAL) ?? 300000
-          const c_nonce = uuidv4()
-          objectPath.set(result, 'c_nonce', c_nonce)
-          objectPath.set(result, 'c_nonce_timestamp', Date.now())
-          await vc_db.put(result)
-          const response = {
-            access_token,
-            token_type: 'bearer',
-            expires_in: 300,
-            c_nonce,
-            c_nonce_expires_in: 300000,
-            authorization_pending: false,
-            interval,
-          }
-          console.log(response)
-          res.status(200).json(response)
         }
-      } catch (e) {
-        console.log('can not find doc')
-        res.status(400).json({error: 'invalid_grant'})
       }
-    } else {
-      console.log('pin included but not needed')
-      res.status(400).json({error: 'invalid_request'})
+      if (Date.now() >= comp_timestamp) {
+        console.log('preauth code expired')
+        res.status(400).json({error: 'invalid_grant'})
+      } else {
+        res.set({
+          'Cache-Control': 'no-store',
+          Pragma: 'no-cache',
+        })
+        const preAuthorizedCode = result._id
+        const payload = {
+          ...(preAuthorizedCode && { preAuthorizedCode })
+        }
+        const access_token = await createJWT(vcIssuerConf.credential_issuer, payload)
+        const interval = getNumberOrUndefined(process.env.INTERVAL) ?? 300000
+        const c_nonce = uuidv4()
+        objectPath.set(result, 'c_nonce', c_nonce)
+        objectPath.set(result, 'c_nonce_timestamp', Date.now())
+        await vc_db.put(result)
+        const response = {
+          access_token,
+          token_type: 'bearer',
+          expires_in: 300,
+          c_nonce,
+          c_nonce_expires_in: 300000,
+          authorization_pending: false,
+          interval,
+        }
+        console.log(response)
+        res.status(200).json(response)
+      }
+    } catch (e) {
+      console.log('can not find doc')
+      res.status(400).json({error: 'invalid_grant'})
     }
   } else {
     res.status(400).json({error: 'unsupported_grant_type'})

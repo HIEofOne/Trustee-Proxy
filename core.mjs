@@ -255,7 +255,7 @@ async function didkitIssue_alt(credentialSubject) {
   }
 }
 
-async function didkitIssue(credentialSubject) {
+async function didkitIssue(credentialSubject, type) {
   const opts = {headers: {'Content-Type': 'application/json'}}
   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'didkit', settings.couchdb_auth)
   try {
@@ -281,7 +281,7 @@ async function didkitIssue(credentialSubject) {
           }
         ],
         // "id": "http://example.org/credentials/3731", //need to set
-        "type": ["VerifiableCredential", "NPICredential", "OpenBadgeCredential"],
+        "type": ["VerifiableCredential", type],
         "issuer": result.id,
         "issuanceDate": moment().format('YYYY-MM-DDTHH:mm:ss.SSSZ'),
         "credentialSubject": credentialSubject
