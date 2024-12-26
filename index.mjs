@@ -149,29 +149,6 @@ app.get('/.well-known/openid-credential-issuer', (req, res) => {
   res.status(200).json(vcIssuerConf)
 })
 
-app.get('/contexts/v1', (req, res) => {
-  res.set({
-    'Cache-Control': 'no-store',
-    Pragma: 'no-cache',
-  })
-  res.setHeader('content-type', 'application/ld+json')
-  res.status(200).json({
-    "@context": {
-      "npi": "https://schema.org/usNPI",
-      "name": "https://schema.org/name",
-      "description": "https://schema.org/description",
-      "gender": "https://schema.org/gender",
-      "city": "https://schema.org/city",
-      "state": "https://schema.org/state",
-      "zip": "https://schema.org/PostalAddress",
-      "credentials": "https://schema.org/EducationalOccupationalCredential",
-      "specialty": "https://schema.org/MedicalSpecialty",
-      "medicalSchool": "https://schema.org/MedicalOrganization",
-      "residencies": "https://schema.org/MedicalOrganization",
-      "profilePhoto": "https://schema.org/image"
-    }
-  })
-})
 // app.get('/didstart', async(req, res) => {
 //   const did = createDIDKey()
 //   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'keys', settings.couchdb_auth)
@@ -269,6 +246,30 @@ app.post('/credential', async(req, res) => {
       console.log('jwt invalid')
       res.status(400).json({error: 'invalid_token'})
     }
+  }
+})
+
+app.get('/credential_offer/:offer_reference', async(req, res) => {
+  const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
+  const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
+  const result = await vc_db.find({selector: {'offer_reference': {$eq: req.params.offer_reference}}})
+  if (result.docs.length > 0) {
+    const response = {
+      "credential_issuer": vcIssuerConf.credential_issuer,
+      "credential_configuration_ids": [
+        "NPICredential",
+        "OpenBadgeCredential"
+      ],
+      "grants": {
+        "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+          "pre-authorized_code": result.docs[0].preauth_code,
+          "tx_code": {}
+        }
+      }
+    }
+    res.status(200).json(response)
+  } else {
+    res.status(400).json({error: 'no_offers'})
   }
 })
 
@@ -386,12 +387,16 @@ app.get('/doximity_redirect', async(req, res) => {
         await vc_db.info()
         const vc_doc = await didkitIssue(credentialSubject)
         const preauth_code = uuidv4()
+        const offer_reference = uuidv4()
         objectPath.set(vc_doc, '_id', preauth_code)
+        objectPath.set(vc_doc, 'offer_reference', offer_reference)
         objectPath.set(vc_doc, 'timestamp', Date().now)
         await vc_db.put(vc_doc)
-        const uri = 'issuer=' + encodeURIComponent(vcIssuerConf.credential_issuer) + '&credential_type=NPICredential&pre-authorized_code=' + preauth_code + '&user_pin_required=false'
+        const uri = 'credential_offer_uri=' + encodeURIComponent(process.env.DOMAIN + "/credential-offer/" + offer_reference)
+        // const uri = 'issuer=' + encodeURIComponent(vcIssuerConf.credential_issuer) + '&credential_type=NPICredential&pre-authorized_code=' + preauth_code + '&user_pin_required=false'
         const vc = {
-          uri: 'openid-initiate-issuance://?' + uri,
+          uri: 'openid-credential-offer://?' + uri,
+          // uri: 'openid-initiate-issuance://?' + uri,
           uri_enc: uri
         }
         res.render('index.hbs', {vc: vc})

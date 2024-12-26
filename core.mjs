@@ -287,13 +287,7 @@ async function didkitIssue(credentialSubject) {
         "credentialSubject": credentialSubject
       },
       "options": {
-        // "type": "Ed25519Signature2020"
       }
-      // "options": {
-      //   "verificationMethod": result.assertionMethod[0],
-      //   "proofPurpose": "assertionMethod",
-      //   "proofFormat": "jwt"
-      // }
     }
     try {
       const res = await axios.post('http://didkit:3000/credentials/issue', body, opts)
