@@ -267,6 +267,9 @@ async function didkitIssue(credentialSubject) {
         "issuanceDate": moment().format('YYYY-MM-DDTHH:mm:ss.SSSZ'),
         "credentialSubject": credentialSubject
       },
+      "options": {
+        "type": "Ed25519Signature2020"
+      }
       // "options": {
       //   "verificationMethod": result.assertionMethod[0],
       //   "proofPurpose": "assertionMethod",
