@@ -293,7 +293,7 @@ app.get('/credential_offer/:offer_reference', async(req, res) => {
       "credential_issuer": vcIssuerConf.credential_issuer,
       "credential_configuration_ids": [
         "NPICredential",
-        "OpenBadgeCredential"
+        // "OpenBadgeCredential"
       ],
       "grants": {
         "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
