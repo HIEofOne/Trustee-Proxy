@@ -37,55 +37,77 @@ const vcIssuerConf = {
   "grant_types_supported": ["urn:ietf:params:oauth:grant-type:pre-authorized_code"],
   "credential_configurations_supported": {
     "OpenBadgeCredential": {
-      "formats": {
-        "jwt_vc": {
-          "types": ["VerifiableCredential","OpenBadgeCredential"],
-          "cryptographic_binding_methods_supported": ["did"],
-          "credential_signing_alg_values_supported": ["ES256","ES256K", "RS256"]
-        },
-        "ldp_vc": {
-          "types": ["VerifiableCredential","OpenBadgeCredential"],
-          "cryptographic_binding_methods_supported": ["did"],
-          "credential_signing_alg_values_supported":["Ed25519Signature2018"]
-        }
-      },
-      "display": [{"name": 'OpenBadge Credential'}],
+      "format": "jwt_vc",
+      "cryptographic_binding_methods_supported": ["did"],
+      "credential_signing_alg_values_supported": ["ES256","ES256K", "RS256"],
+      "display": [{"name": 'OpenBadge Credential'}]
     },
     "NPICredential": {
-      "formats": {
-        "jwt_vc": {
-          "types": ["VerifiableCredential","NPICredential"],
-          "cryptographic_binding_methods_supported": ["did"],
-          "credential_signing_alg_values_supported": ["ES256","ES256K", "RS256"],
-          "display": [
-            {
-              "text_color": '#12107c',
-              "locale": 'en-US',
-              "logo": {
-                "alt_text": 'a square logo of a university',
-                "url": 'https://dir.hieofone.org/logo.png',
-              },
-              "name": 'NPI Credential',
-              "background_color": '#FFFFFF'
-            }
-          ],
-          "credentialSubject": {
-            "npi": {"display": [{"name": 'NPI'}]},
-            "name": {"display": [{"name": 'Name'}]},
-            "description": {"display": [{"name": 'Description'}]},
-            "gender": {"display": [{"name": 'Gender'}]},
-            "city": {"display": [{"name": 'NPI'}]},
-            "state": {"display": [{"name": 'State'}]},
-            "zip": {"display": [{"name": 'ZIP Code'}]},
-            "credentials": {"display": [{"name": 'Credentials'}]},
-            "specialty": {"display": [{"name": 'Specialty'}]},
-            "medicalSchool": {"display": [{"name": 'Medical School'}]},
-            "residencies": {"display": [{"name": 'Residencies'}]},
-            "profilePhoto": {"display": [{"name": 'Profile Photo'}]}
-          }
+      "format": "jwt_vc",
+      "cryptographic_binding_methods_supported": ["did"],
+      "credential_signing_alg_values_supported": ["ES256","ES256K", "RS256"],
+      "display": [
+        {
+          "text_color": '#12107c',
+          "locale": 'en-US',
+          "logo": {
+            "alt_text": 'a square logo of a university',
+            "url": 'https://dir.hieofone.org/logo.png',
+          },
+          "name": 'NPI Credential',
+          "background_color": '#FFFFFF'
         }
-      },
-      "display": [{"name": 'NPI Credential'}]
+      ],
+      "claims": [
+        {
+          "path": ["credentialSubject", "npi"],
+          "display": [{"name": 'NPI'}]
+        },
+        {
+          "path": ["credentialSubject", "name"],
+          "display": [{"name": 'Name'}]
+        },
+        {
+          "path": ["credentialSubject", "description"],
+          "display": [{"name": 'Description'}]
+        },
+        {
+          "path": ["credentialSubject", "gender"],
+          "display": [{"name": 'Gender'}]
+        },
+        {
+          "path": ["credentialSubject", "city"],
+          "display": [{"name": 'City'}]
+        },
+        {
+          "path": ["credentialSubject", "state"],
+          "display": [{"name": 'State'}]
+        },
+        {
+          "path": ["credentialSubject", "zip"],
+          "display": [{"name": 'Zip Code'}]
+        },
+        {
+          "path": ["credentialSubject", "credentials"],
+          "display": [{"name": 'Credentials'}]
+        },
+        {
+          "path": ["credentialSubject", "specialty"],
+          "display": [{"name": 'Specialty'}]
+        },
+        {
+          "path": ["credentialSubject", "medicalSchool"],
+          "display": [{"name": 'Medical School'}]
+        },
+        {
+          "path": ["credentialSubject", "residencies"],
+          "display": [{"name": 'Residencies'}]
+        },
+        {
+          "path": ["credentialSubject", "profilePhoto"],
+          "display": [{"name": 'Profile Photo'}]
+        }
+      ]
     }
   }
 }
