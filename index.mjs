@@ -250,9 +250,11 @@ app.post('/credential', async(req, res) => {
 })
 
 app.get('/credential_offer/:offer_reference', async(req, res) => {
+  console.log(req.params.offer_reference)
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
   const result = await vc_db.find({selector: {'offer_reference': {$eq: req.params.offer_reference}}})
+  console.log(result)
   if (result.docs.length > 0) {
     const response = {
       "credential_issuer": vcIssuerConf.credential_issuer,
@@ -392,7 +394,7 @@ app.get('/doximity_redirect', async(req, res) => {
         objectPath.set(vc_doc, 'offer_reference', offer_reference)
         objectPath.set(vc_doc, 'timestamp', Date().now)
         await vc_db.put(vc_doc)
-        const uri = 'credential_offer_uri=' + encodeURIComponent(process.env.DOMAIN + "/credential-offer/" + offer_reference)
+        const uri = 'credential_offer_uri=' + encodeURIComponent(process.env.DOMAIN + "/credential_offer/" + offer_reference)
         // const uri = 'issuer=' + encodeURIComponent(vcIssuerConf.credential_issuer) + '&credential_type=NPICredential&pre-authorized_code=' + preauth_code + '&user_pin_required=false'
         const vc = {
           uri: 'openid-credential-offer://?' + uri,
