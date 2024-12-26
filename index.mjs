@@ -264,7 +264,7 @@ app.get('/credential_offer/:offer_reference', async(req, res) => {
       ],
       "grants": {
         "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
-          "pre-authorized_code": result.docs[0].preauth_code,
+          "pre-authorized_code": result.docs[0]._id,
           "tx_code": {}
         }
       }
