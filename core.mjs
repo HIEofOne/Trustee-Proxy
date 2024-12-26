@@ -265,7 +265,20 @@ async function didkitIssue(credentialSubject) {
       "credential": {
         "@context": [
           "https://www.w3.org/ns/credentials/v2",
-          urlFix(process.env.DOMAIN) + "contexts/v1"
+          {
+            "npi": "https://schema.org/usNPI",
+            "name": "https://schema.org/name",
+            "description": "https://schema.org/description",
+            "gender": "https://schema.org/gender",
+            "city": "https://schema.org/city",
+            "state": "https://schema.org/state",
+            "zip": "https://schema.org/PostalAddress",
+            "credentials": "https://schema.org/EducationalOccupationalCredential",
+            "specialty": "https://schema.org/MedicalSpecialty",
+            "medicalSchool": "https://schema.org/MedicalOrganization",
+            "residencies": "https://schema.org/MedicalOrganization",
+            "profilePhoto": "https://schema.org/image"
+          }
         ],
         // "id": "http://example.org/credentials/3731", //need to set
         "type": ["VerifiableCredential", "NPICredential", "OpenBadgeCredential"],
