@@ -156,18 +156,18 @@ app.get('/contexts/v1', (req, res) => {
   })
   res.status(200).json({
     "@context": {
-      "npi": "@id",
-      "name": "@vocab",
-      "description": "@vocab",
-      "gender": "@vocab",
-      "city": "@vocab",
-      "state": "@vocab",
-      "zip": "@vocab",
-      "credentials": "@vocab",
-      "specialty": "@vocab",
-      "medicalSchool": "@vocab",
-      "residencies": "@vocab",
-      "profilePhoto": "@vocab"
+      "npi": "https://schema.org/usNPI",
+      "name": "https://schema.org/name",
+      "description": "https://schema.org/description",
+      "gender": "https://schema.org/gender",
+      "city": "https://schema.org/city",
+      "state": "https://schema.org/state",
+      "zip": "https://schema.org/PostalAddress",
+      "credentials": "https://schema.org/EducationalOccupationalCredential",
+      "specialty": "https://schema.org/MedicalSpecialty",
+      "medicalSchool": "https://schema.org/MedicalOrganization",
+      "residencies": "https://schema.org/MedicalOrganization",
+      "profilePhoto": "https://schema.org/image"
     }
   })
 })
