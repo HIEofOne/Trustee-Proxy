@@ -41,12 +41,12 @@ const vcIssuerConf = {
         "jwt_vc": {
           "types": ["VerifiableCredential","OpenBadgeCredential"],
           "cryptographic_binding_methods_supported": ["did"],
-          "cryptographic_suites_supported": ["ES256","ES256K", "RS256"]
+          "credential_signing_alg_values_supported": ["ES256","ES256K", "RS256"]
         },
         "ldp_vc": {
           "types": ["VerifiableCredential","OpenBadgeCredential"],
           "cryptographic_binding_methods_supported": ["did"],
-          "cryptographic_suites_supported":["Ed25519Signature2018"]
+          "credential_signing_alg_values_supported":["Ed25519Signature2018"]
         }
       },
       "display": [{"name": 'OpenBadge Credential'}],
@@ -56,7 +56,7 @@ const vcIssuerConf = {
         "jwt_vc": {
           "types": ["VerifiableCredential","NPICredential"],
           "cryptographic_binding_methods_supported": ["did"],
-          "cryptographic_suites_supported": ["ES256","ES256K", "RS256"],
+          "credential_signing_alg_values_supported": ["ES256","ES256K", "RS256"],
           "display": [
             {
               "text_color": '#12107c',
@@ -254,7 +254,6 @@ app.get('/credential_offer/:offer_reference', async(req, res) => {
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
   const result = await vc_db.find({selector: {'offer_reference': {$eq: req.params.offer_reference}}})
-  console.log(result)
   if (result.docs.length > 0) {
     const response = {
       "credential_issuer": vcIssuerConf.credential_issuer,
