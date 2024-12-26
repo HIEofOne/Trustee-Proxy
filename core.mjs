@@ -268,7 +268,7 @@ async function didkitIssue(credentialSubject) {
         "credentialSubject": credentialSubject
       },
       "options": {
-        "type": "Ed25519Signature2020"
+        // "type": "Ed25519Signature2020"
       }
       // "options": {
       //   "verificationMethod": result.assertionMethod[0],
