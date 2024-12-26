@@ -149,6 +149,28 @@ app.get('/.well-known/openid-credential-issuer', (req, res) => {
   res.status(200).json(vcIssuerConf)
 })
 
+app.get('/contexts/v1', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store',
+    Pragma: 'no-cache',
+  })
+  res.status(200).json({
+    "@context": {
+      "npi": "@id",
+      "name": "@vocab",
+      "description": "@vocab",
+      "gender": "@vocab",
+      "city": "@vocab",
+      "state": "@vocab",
+      "zip": "@vocab",
+      "credentials": "@vocab",
+      "specialty": "@vocab",
+      "medicalSchool": "@vocab",
+      "residencies": "@vocab",
+      "profilePhoto": "@vocab"
+    }
+  })
+})
 // app.get('/didstart', async(req, res) => {
 //   const did = createDIDKey()
 //   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'keys', settings.couchdb_auth)

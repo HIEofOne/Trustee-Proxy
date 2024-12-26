@@ -230,7 +230,10 @@ async function didkitIssue_alt(credentialSubject) {
       Cmd: cmd,
     }
     const stdin = {
-      "@context": "https://www.w3.org/2018/credentials/v1",
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://dir.hieofone.org"
+      ],
       "id": "http://example.org/credentials/3731", //need to set
       "type": ["VerifiableCredential", "ExampleNPICredential"],
       "issuer": result.id,
@@ -260,9 +263,13 @@ async function didkitIssue(credentialSubject) {
     console.log(credentialSubject)
     const body = {
       "credential": {
-        "@context": "https://www.w3.org/2018/credentials/v1",
-        "id": "http://example.org/credentials/3731", //need to set
-        "type": ["VerifiableCredential"],
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          "https://www.w3.org/ns/credentials/examples/v2",
+          urlFix(process.env.DOMAIN) + "contexts/v1"
+        ],
+        // "id": "http://example.org/credentials/3731", //need to set
+        "type": ["VerifiableCredential", "NPICredential", "OpenBadgeCredential"],
         "issuer": result.id,
         "issuanceDate": moment().format('YYYY-MM-DDTHH:mm:ss.SSSZ'),
         "credentialSubject": credentialSubject
