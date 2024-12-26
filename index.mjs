@@ -154,6 +154,7 @@ app.get('/contexts/v1', (req, res) => {
     'Cache-Control': 'no-store',
     Pragma: 'no-cache',
   })
+  res.setHeader('content-type', 'application/ld+json')
   res.status(200).json({
     "@context": {
       "npi": "https://schema.org/usNPI",

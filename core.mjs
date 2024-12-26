@@ -265,7 +265,6 @@ async function didkitIssue(credentialSubject) {
       "credential": {
         "@context": [
           "https://www.w3.org/ns/credentials/v2",
-          "https://www.w3.org/ns/credentials/examples/v2",
           urlFix(process.env.DOMAIN) + "contexts/v1"
         ],
         // "id": "http://example.org/credentials/3731", //need to set
