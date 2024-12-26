@@ -625,7 +625,7 @@ app.get('/oidc_relay_start/:state', (req, res) => {
 
 app.get('/qr/:content', async(req, res) => {
   try {
-    const content = 'openid-initiate-issuance://?' + req.params.content
+    const content = 'openid-credential-offer://?' + req.params.content
     console.log(content)
     const qrStream = new PassThrough()
     const result = await QRCode.toFileStream(qrStream, content, {
