@@ -258,9 +258,6 @@ app.post('/credential', async(req, res) => {
                           vc: result.verifiableCredential
                         }
                         try {
-                          const didkit_db = new PouchDB(urlFix(settings.couchdb_uri) + 'didkit', settings.couchdb_auth)
-                          const didkit_key = await didkit_db.get('issuer_key')
-                          console.log(didkit_key)
                           const jwt_vc = await createJWT(result.verifiableCredential.issuer, payload, 'ES256')
                           const response = {
                             // 'credentials': [{ 'credential': jwt_vc }]

@@ -110,13 +110,21 @@ PouchDB.plugin(PouchDBFind)
 
 async function createJWT(iss, payload=null, alg='RS256') {
   // aud is audience - base url of this server
+  let use_key = null
   const keys = await getKeys()
   if (keys.length === 0) {
-    const pair = await createKeyPair()
+    const pair = await createKeyPair(alg)
     keys.push(pair)
+  } else {
+    filter_keys = keys.filter((key) => {key.privateKey.alg === alg})
+    if (filter_keys.length === 0) {
+      use_key = await createKeyPair(alg)
+    } else {
+      use_key = filter_keys[0]
+    }
   }
-  console.log(keys[0])
-  const rsaPrivateKey = await jose.importJWK(keys[0].privateKey, alg)
+  console.log(use_key)
+  const rsaPrivateKey = await jose.importJWK(use_key.privateKey, alg)
   const payload_vc = {
   //   "vc": {
   //     "@context": [
