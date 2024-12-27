@@ -432,7 +432,7 @@ app.get('/doximity_redirect', async(req, res) => {
         objectPath.set(vc_doc, 'timestamp', Date().now)
         objectPath.set(vc_doc, 'credential_type', 'NPICredential')
         const randomNum = Math.random() * 9000
-        const tx_code = Math.floor(1000 + randomNum)
+        const tx_code = Math.floor(1000 + randomNum).toString()
         objectPath.set(vc_doc, 'tx_code', tx_code)
         await vc_db.put(vc_doc)
         const uri = 'credential_offer_uri=' + encodeURIComponent(process.env.DOMAIN + "/credential_offer/" + offer_reference)
@@ -722,41 +722,40 @@ app.post('/token', async(req, res) => {
       const result = await vc_db.get(objectPath.get(req, 'body.pre-authorized_code'))
       const preauth_code_duration = getNumberOrUndefined(process.env.PRE_AUTHORIZED_CODE_EXPIRATION_DURATION) ?? 300000
       const comp_timestamp = result.timestamp + preauth_code_duration
-      if (objectPath.has(req, 'body.tx_code')) {
-        if (objectPath.get(req, 'body.tx_code') !== result.tx_code) {
-          console.log('tx_code does not match')
-          res.status(400).json({error: 'invalid_grant'})
-        }
-      }
-      if (Date.now() >= comp_timestamp) {
-        console.log('preauth code expired')
+      if (objectPath.get(req, 'body.tx_code') !== result.tx_code) {
+        console.log('tx_code does not match')
         res.status(400).json({error: 'invalid_grant'})
       } else {
-        res.set({
-          'Cache-Control': 'no-store',
-          Pragma: 'no-cache',
-        })
-        const preAuthorizedCode = result._id
-        const payload = {
-          ...(preAuthorizedCode && { preAuthorizedCode })
+        if (Date.now() >= comp_timestamp) {
+          console.log('preauth code expired')
+          res.status(400).json({error: 'invalid_grant'})
+        } else {
+          res.set({
+            'Cache-Control': 'no-store',
+            Pragma: 'no-cache',
+          })
+          const preAuthorizedCode = result._id
+          const payload = {
+            ...(preAuthorizedCode && { preAuthorizedCode })
+          }
+          const access_token = await createJWT(vcIssuerConf.credential_issuer, payload)
+          const interval = getNumberOrUndefined(process.env.INTERVAL) ?? 300000
+          const c_nonce = uuidv4()
+          objectPath.set(result, 'c_nonce', c_nonce)
+          objectPath.set(result, 'c_nonce_timestamp', Date.now())
+          await vc_db.put(result)
+          const response = {
+            access_token,
+            token_type: 'bearer',
+            expires_in: 300,
+            c_nonce,
+            c_nonce_expires_in: 300000,
+            authorization_pending: false,
+            interval,
+          }
+          console.log(response)
+          res.status(200).json(response)
         }
-        const access_token = await createJWT(vcIssuerConf.credential_issuer, payload)
-        const interval = getNumberOrUndefined(process.env.INTERVAL) ?? 300000
-        const c_nonce = uuidv4()
-        objectPath.set(result, 'c_nonce', c_nonce)
-        objectPath.set(result, 'c_nonce_timestamp', Date.now())
-        await vc_db.put(result)
-        const response = {
-          access_token,
-          token_type: 'bearer',
-          expires_in: 300,
-          c_nonce,
-          c_nonce_expires_in: 300000,
-          authorization_pending: false,
-          interval,
-        }
-        console.log(response)
-        res.status(200).json(response)
       }
     } catch (e) {
       console.log('can not find doc')
