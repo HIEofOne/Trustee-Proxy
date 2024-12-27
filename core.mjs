@@ -309,11 +309,7 @@ async function didkitVerify(vc) {
     const result = await db.get('did_doc')
     const body = {
       "verifiableCredential": vc,
-      "options": {
-        "verificationMethod": result.assertionMethod[0],
-        "proofPurpose": "assertionMethod",
-        "proofFormat": "jwt"
-      }
+      "options": {}
     }
     try {
       const res = await axios.post('http://didkit:3000/credentials/verify', body, opts)

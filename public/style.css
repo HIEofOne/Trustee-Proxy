@@ -77,13 +77,6 @@ header p{
   width: 200px;
 }
 
-.otp {
-  height: 100vh;
-  margin: 0;
-  display: grid;
-  place-items: center;
-}
-
 [autocomplete="one-time-code"] {
   --magic-number: 100px;
   background-image: url("https://assets.codepen.io/3/rounded-rectangle.svg");

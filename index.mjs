@@ -49,7 +49,7 @@ const vcIssuerConf = {
       "display": [{"name": 'OpenBadge Credential'}]
     },
     "NPICredential": {
-      "format": "jwt_vc",
+      "format": "jwt_vc_json-ld",
       "cryptographic_binding_methods_supported": ["did"],
       "credential_signing_alg_values_supported": ["ES256","ES256K", "RS256"],
       "credential_definition": {
