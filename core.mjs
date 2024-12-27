@@ -108,14 +108,14 @@ PouchDB.plugin(PouchDBFind)
 //   return vpJwt
 // } 
 
-async function createJWT(iss, payload=null) {
+async function createJWT(iss, payload=null, alg='RS256') {
   // aud is audience - base url of this server
   const keys = await getKeys()
   if (keys.length === 0) {
     const pair = await createKeyPair()
     keys.push(pair)
   }
-  const rsaPrivateKey = await jose.importJWK(keys[0].privateKey, 'RS256')
+  const rsaPrivateKey = await jose.importJWK(keys[0].privateKey, alg)
   const payload_vc = {
   //   "vc": {
   //     "@context": [
@@ -152,7 +152,7 @@ async function createJWT(iss, payload=null) {
   } else {
     payload_final = payload_vc
   }
-  const header = { alg: 'RS256' }
+  const header = { alg: alg }
   const jwt = await new jose.SignJWT(payload_final)
     .setProtectedHeader(header)
     .setIssuedAt()
