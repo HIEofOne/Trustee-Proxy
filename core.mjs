@@ -443,17 +443,14 @@ async function createKeyPair(alg='RS256') {
   const private_key = await jose.exportJWK(privateKey)
   objectPath.set(private_key, 'kid', kid)
   objectPath.set(private_key, 'alg', alg)
-  const did = createDIDKey()
   const keys = await getKeys()
   let doc = {}
   if (keys.length > 0) {
     doc = keys[0]
     objectPath.set(doc, 'publicKey', public_key)
     objectPath.set(doc, 'privateKey', private_key)
-    objectPath.set(doc, 'didKey', did.didKey)
-    objectPath.set(doc, 'didJWK', did.didJWK)
   } else {
-    doc = {_id: kid, publicKey: public_key, privateKey: private_key, didKey: did.didKey, didJWK: did.didJWK}
+    doc = {_id: kid, publicKey: public_key, privateKey: private_key}
   }
   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'keys', settings.couchdb_auth)
   await db.put(doc)
