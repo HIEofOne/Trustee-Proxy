@@ -259,10 +259,11 @@ app.post('/credential', async(req, res) => {
                         }
                         const jwt_vc = await createJWT(vcIssuerConf.credential_issuer, payload)
                         const response = {
-                          'credentials': [{ 'credential': jwt_vc }]
-                          // 'format': 'jwt_vc',
-                          // new_c_nonce,
-                          // c_nonce_expires_in: 300
+                          // 'credentials': [{ 'credential': jwt_vc }]
+                          'credential': jwt_vc,
+                          'format': 'jwt_vc',
+                          new_c_nonce,
+                          c_nonce_expires_in: 300
                         }
                         console.log(response)
                         res.status(200).json(response)
