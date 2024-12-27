@@ -623,10 +623,15 @@ app.get('/oidc_relay_connect', async(req, res) => {
       }
     }
     console.log(config)
-    url = oidcclient.buildAuthorizationUrl(config, parameters)
-    objectPath.set(doc, 'code_verifier', code_verifier)
-    await db.put(doc)
-    res.redirect(url)
+    if (config === null) {
+      console.log(doc)
+      res.status(200).json({error: 'workflow is broken'})
+    } else {
+      url = oidcclient.buildAuthorizationUrl(config, parameters)
+      objectPath.set(doc, 'code_verifier', code_verifier)
+      await db.put(doc)
+      res.redirect(url)
+    }
   } else {
     const check = {
       pkceCodeVerifier: doc.code_verifier,
