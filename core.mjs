@@ -115,6 +115,7 @@ async function createJWT(iss, payload=null, alg='RS256') {
     const pair = await createKeyPair()
     keys.push(pair)
   }
+  console.log(keys[0])
   const rsaPrivateKey = await jose.importJWK(keys[0].privateKey, alg)
   const payload_vc = {
   //   "vc": {
