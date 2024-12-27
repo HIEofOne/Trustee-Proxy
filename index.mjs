@@ -300,7 +300,7 @@ app.get('/credential_offer/:offer_reference', async(req, res) => {
           "pre-authorized_code": result.docs[0]._id,
           "tx_code": {
             "length": 4,
-            "input_mode": numeric,
+            "input_mode": "numeric",
             "description": "Please provide the one-time code"
           }
         }
