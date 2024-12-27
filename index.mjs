@@ -254,12 +254,17 @@ app.post('/credential', async(req, res) => {
                         objectPath.set(result, 'new_c_nonce', new_c_nonce)
                         objectPath.set(result, 'new_c_nonce_timestamp', new_c_nonce_timestamp)
                         await vc_db.put(result)
-                        const response = {
-                          'credential': result.verifiableCredential,
-                          'format': 'jwt_vc',
-                          new_c_nonce,
-                          c_nonce_expires_in: 300
+                        const payload = {
+                          vc: result.verifiableCredential
                         }
+                        const jwt_vc = await createJWT(vcIssuerConf.credential_issuer, payload)
+                        const response = {
+                          'credentials': [{ 'credential': jwt_vc }]
+                          // 'format': 'jwt_vc',
+                          // new_c_nonce,
+                          // c_nonce_expires_in: 300
+                        }
+                        console.log(response)
                         res.status(200).json(response)
                       }
                     }
