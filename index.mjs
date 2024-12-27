@@ -763,23 +763,28 @@ app.post('/token', async(req, res) => {
           const payload = {
             ...(preAuthorizedCode && { preAuthorizedCode })
           }
-          const access_token = await createJWT(vcIssuerConf.credential_issuer, payload)
-          const interval = getNumberOrUndefined(process.env.INTERVAL) ?? 300000
-          const c_nonce = uuidv4()
-          objectPath.set(result, 'c_nonce', c_nonce)
-          objectPath.set(result, 'c_nonce_timestamp', Date.now())
-          await vc_db.put(result)
-          const response = {
-            access_token,
-            token_type: 'bearer',
-            expires_in: 300,
-            c_nonce,
-            c_nonce_expires_in: 300000,
-            authorization_pending: false,
-            interval,
+          try {
+            const access_token = await createJWT(vcIssuerConf.credential_issuer, payload)
+            const interval = getNumberOrUndefined(process.env.INTERVAL) ?? 300000
+            const c_nonce = uuidv4()
+            objectPath.set(result, 'c_nonce', c_nonce)
+            objectPath.set(result, 'c_nonce_timestamp', Date.now())
+            await vc_db.put(result)
+            const response = {
+              access_token,
+              token_type: 'bearer',
+              expires_in: 300,
+              c_nonce,
+              c_nonce_expires_in: 300000,
+              authorization_pending: false,
+              interval,
+            }
+            console.log(response)
+            res.status(200).json(response)
+          } catch (e) {
+            console.log(e)
+            res.status(400).json({error: 'invalid_grant'})
           }
-          console.log(response)
-          res.status(200).json(response)
         }
       }
     } catch (e) {
