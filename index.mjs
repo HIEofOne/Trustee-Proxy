@@ -257,16 +257,21 @@ app.post('/credential', async(req, res) => {
                         const payload = {
                           vc: result.verifiableCredential
                         }
-                        const jwt_vc = await createJWT(result.verifiableCredential.issuer, payload, 'ES256')
-                        const response = {
-                          // 'credentials': [{ 'credential': jwt_vc }]
-                          'credential': jwt_vc,
-                          'format': 'jwt_vc',
-                          new_c_nonce,
-                          c_nonce_expires_in: 300
+                        try {
+                          const jwt_vc = await createJWT(result.verifiableCredential.issuer, payload, 'ES256')
+                          const response = {
+                            // 'credentials': [{ 'credential': jwt_vc }]
+                            'credential': jwt_vc,
+                            'format': 'jwt_vc',
+                            new_c_nonce,
+                            c_nonce_expires_in: 300
+                          }
+                          console.log(response)
+                          res.status(200).json(response)
+                        } catch (e) {
+                          console.log(e)
+                          res.status(400).json({error: 'invalid_token'})
                         }
-                        console.log(response)
-                        res.status(200).json(response)
                       }
                     }
                   }
