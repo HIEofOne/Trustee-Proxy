@@ -116,7 +116,7 @@ async function createJWT(iss, payload=null, alg='RS256') {
     const pair = await createKeyPair(alg)
     keys.push(pair)
   } else {
-    filter_keys = keys.filter((key) => {key.privateKey.alg === alg})
+    const filter_keys = keys.filter((key) => {key.privateKey.alg === alg})
     if (filter_keys.length === 0) {
       use_key = await createKeyPair(alg)
     } else {
