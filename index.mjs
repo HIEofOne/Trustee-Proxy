@@ -625,7 +625,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
     console.log(config)
     if (config === null) {
       console.log(doc)
-      res.status(200).json({error: 'workflow is broken'})
+      res.status(200).send('workflow is broken')
     } else {
       url = oidcclient.buildAuthorizationUrl(config, parameters)
       objectPath.set(doc, 'code_verifier', code_verifier)
