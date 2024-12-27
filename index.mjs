@@ -567,7 +567,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
       } catch (e) {
         objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
         await db.put(doc)
-        res.redirect(doc.response_uri)
+        res.status(200).send('Not authorized - Problem accessing OpenID Configuration')
         proceed = false
       }
     } else {
@@ -602,7 +602,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
       } catch (e) {
         objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
         await db.put(doc)
-        res.redirect(doc.response_uri)
+        res.status(200).send('Not authorized - Problem accessing OpenID Configuration')
         proceed = false
       }
     }
