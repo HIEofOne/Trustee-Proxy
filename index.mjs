@@ -433,6 +433,7 @@ app.get('/doximity_redirect', async(req, res) => {
         objectPath.set(vc_doc, 'credential_type', 'NPICredential')
         const randomNum = Math.random() * 9000
         const tx_code = Math.floor(1000 + randomNum).toString()
+        const tx_code_split = tx_code.split('')
         objectPath.set(vc_doc, 'tx_code', tx_code)
         await vc_db.put(vc_doc)
         const uri = 'credential_offer_uri=' + encodeURIComponent(process.env.DOMAIN + "/credential_offer/" + offer_reference)
@@ -441,7 +442,10 @@ app.get('/doximity_redirect', async(req, res) => {
           uri: 'openid-credential-offer://?' + uri,
           // uri: 'openid-initiate-issuance://?' + uri,
           uri_enc: uri,
-          tx_code: tx_code
+          tx_code1: tx_code_split[0],
+          tx_code2: tx_code_split[1],
+          tx_code3: tx_code_split[2],
+          tx_code4: tx_code_split[3]
         }
         res.render('index.hbs', {vc: vc})
       } catch (e) {

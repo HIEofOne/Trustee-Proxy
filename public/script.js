@@ -1,7 +1,5 @@
-const wrapper = document.querySelector(".wrapper"),
-generateBtn = wrapper.querySelector(".form button");
-
-generateBtn.addEventListener("click", (e) => {
-    const button = e.target
-    window.open(button.value)
-});
+const button = document.getElementById("myButton")
+button.addEventListener("click", (e) => {
+    const button_target = e.target
+    window.open(button_target.value)
+})

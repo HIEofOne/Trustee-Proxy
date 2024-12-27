@@ -13,53 +13,9 @@ body{
   background: #3498DB;
   justify-content: center;
 }
-.wrapper{
-  height: 530px;
-  max-width: 410px;
-  background: #fff;
-  border-radius: 7px;
-  padding: 20px 25px 0;
-  transition: height 0.2s ease;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-}
-header h1{
-  font-size: 21px;
-  font-weight: 500;
-  text-align: center;
-}
-header p{
-  margin-top: 5px;
-  color: #575757;
-  font-size: 16px;
-  text-align: center;
-}
-.wrapper .form{
-  margin: 20px 0 25px;
-}
-.form :where(input, button){
-  width: 100%;
-  height: 55px;
-  border: none;
-  outline: none;
-  border-radius: 5px;
-  transition: 0.1s ease;
-}
-.form input{
-  font-size: 18px;
-  padding: 0 17px;
-  border: 1px solid #999;
-}
-.form input:focus{
-  box-shadow: 0 3px 6px rgba(0,0,0,0.13);
-}
-.form input::placeholder{
-  color: #999;
-}
+
 .form button{
   color: #fff;
-  cursor: pointer;
-  margin-top: 20px;
-  font-size: 17px;
   background: #3498DB;
 }
 .qr-code{
@@ -75,36 +31,4 @@ header p{
 }
 .qr-code img{
   width: 200px;
-}
-
-[autocomplete="one-time-code"] {
-  --magic-number: 100px;
-  background-image: url("https://assets.codepen.io/3/rounded-rectangle.svg");
-  background-size: var(--magic-number);
-  background-repeat: repeat-x;
-  border: 0;
-  height: var(--magic-number);
-  width: calc(4 * var(--magic-number));
-  font-size: calc(0.6 * var(--magic-number));
-  font-family: monospace;
-  letter-spacing: calc(0.64 * var(--magic-number));
-  padding-inline-start: calc(0.3 * var(--magic-number));
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-@media (max-width: 430px){
-  .wrapper{
-    height: 510px;
-    padding: 16px 20px;
-  }
-  header p{
-    color: #696969;
-  }
-  .form :where(input, button){
-    height: 52px;
-  }
-  .qr-code img{
-    width: 200px;
-  }  
 }

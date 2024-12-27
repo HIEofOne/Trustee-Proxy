@@ -3,27 +3,36 @@
   <head>
     <meta charset="utf-8">  
     <title>Add Verifiable Credential to your Digital Wallet</title>
+    <link href="https://cdn.jsdelivr.net/npm/beercss@3.8.0/dist/cdn/beer.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
-    <div class="wrapper">
-      <header>
-        <h1>Doximity Verifiable Credential Issuer</h1>
-        <p>To get started, point your wallet's scanner to the QR Code below:</p>
-      </header>
-      <div class="form">
-        <button value="{{ vc.uri }}">Initiate Issuance Request</button>
+    <article class="white black-text">
+      <h4 class="row center">Doximity Verifiable Credential Issuer</h1>
+      <div class="row center">
+        <p class="row center">To get started, point your wallet's scanner to the QR Code below:</p>
       </div>
-      <div class="qr-code">
-        <div>
-          <img src="/qr/{{ vc.uri_enc }}" alt="qr-code">
-        </div>
-        <div class="form">
-          <input required type="text" autocomplete="one-time-code" inputmode="numeric" maxlength="4" pattern="\d{4}" value="{{ vc.tx_code }}">
+      <div class="row center form">
+        <button value="{{ vc.uri }}" class="responsive small round blue" id="myButton">Can't Scan? Initiate Issuance Request</button>
+      </div>
+      <div class="row center">
+        <img class="row center" src="/qr/{{ vc.uri_enc }}" alt="qr-code">
+      </div>
+      <div class="row center">
+        <p class="row center">Transaction code:</p>
+      </div>
+      <div class="row center">
+        <div class="row center">
+          <button class="chip black-text">{{ vc.tx_code1 }}</button>
+          <button class="chip black-text">{{ vc.tx_code2 }}</button>
+          <button class="chip black-text">{{ vc.tx_code3 }}</button>
+          <button class="chip black-text">{{ vc.tx_code4 }}</button>
         </div>
       </div>
-    </div>
+    </article>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.8.0/dist/cdn/beer.min.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
     <script src="/script.js"></script>
   </body>
 </html>
