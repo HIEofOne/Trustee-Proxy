@@ -506,6 +506,7 @@ app.get('/oidc_relay/:state', async(req, res) => {
 })
 
 app.get('/oidc_relay_connect', async(req, res) => {
+  let proceed = true
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'proxy', opts)
   let doc = {}
@@ -514,6 +515,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
       doc = await db.get('id_' + req.query.proxystate)
     } catch (e) {
       res.status(200).send('Not authorized - state does not exist')
+      proceed = false
     }
   } else {
     if (objectPath.has(req, 'query.state')) {
@@ -521,151 +523,154 @@ app.get('/oidc_relay_connect', async(req, res) => {
         doc = await db.get('id_' + req.query.state)
       } catch (e) {
         res.status(200).send('Not authorized - state does not exist')
+        proceed = false
       }
     } else {
       res.status(200).send('Not authorized - no state given')
+      proceed = false
     }
   }
-  let client_id = ''
-  let client_secret = ''
-  let scope = ''
-  let base_url = ''
-  let config = null
-  if (doc.type === 'epic') {
-    if (process.env.OPENEPIC_CLIENT_ID === null) {
-      objectPath.set(doc, 'error', 'OpenEpic Client ID is not set')
-      await db.put(doc)
-      res.redirect(doc.response_uri)
-    }
-    if (!objectPath.has(doc, 'fhir_url')) {
-      objectPath.set(doc, 'error', 'fhir_url is not set')
-      await db.put(doc)
-      res.redirect(doc.response_uri)
-    }
-    client_id = process.env.OPENEPIC_CLIENT_ID
-    if (doc.fhir_url === 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/') {
-      if (process.env.OPENEPIC_SANDBOX_CLIENT_ID === null) {
-        objectPath.set(doc, 'error', 'OpenEpic Sandbox Client ID is not set')
-        await db.put(doc)
-        res.redirect(doc.response_uri)
-      }
-      client_id = process.env.OPENEPIC_SANDBOX_CLIENT_ID
-    }
-    scope = 'openid patient/*.read user/*.* profile launch launch/patient offline_access online_access'
-    try {
-      config = await oidcclient.discovery(
-        new URL(doc.fhir_url + '.well-known/openid-configuration'),
-        client_id,
-        '',
-        oidcclient.None()
-      )
-    } catch (e) {
-      objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
-      await db.put(doc)
-      res.redirect(doc.response_uri)
-    }
-  } else {
-    if (doc.type === 'cms_bluebutton_sandbox') {
-      if (process.env.CMS_BLUEBUTTON_SANDBOX_CLIENT_ID === null) {
-        objectPath.set(doc, 'error', 'CMS Bluebuton Sandbox credentials are not set')
-        await db.put(doc)
-        res.redirect(doc.response_uri)
-      }
-      client_id = process.env.CMS_BLUEBUTTON_SANDBOX_CLIENT_ID
-      client_secret = process.env.CMS_BLUEBUTTON_SANDBOX_CLIENT_SECRET
-      base_url = 'https://sandbox.bluebutton.cms.gov'
-      // var resource_url = base_url + '/v1/fhir/Patient/20140000008325'
-    }
-    if (doc.type === 'cms_bluebutton') {
-      if (process.env.CMS_BLUEBUTTON_CLIENT_ID === null) {
-        objectPath.set(doc, 'error', 'CMS Bluebuton credentials are not set')
-        await db.put(doc)
-        res.redirect(doc.response_uri)
-      }
-      client_id = process.env.CMS_BLUEBUTTON_CLIENT_ID
-      client_secret = process.env.CMS_BLUEBUTTON_CLIENT_SECRET
-      base_url = 'https://api.bluebutton.cms.gov'
-    }
-    scope = 'patient/Patient.read patient/ExplanationOfBenefit.read patient/Coverage.read profile'
-    try {
-      config = await oidcclient.discovery(
-        new URL(base_url + '/.well-known/openid-configuration'),
-        client_id,
-        client_secret
-      )
-    } catch (e) {
-      objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
-      await db.put(doc)
-      res.redirect(doc.response_uri)
-    }
-  }
-  if (objectPath.has(req, 'query.proxystate')) {
-    const code_verifier = oidcclient.randomPKCECodeVerifier()
-    const code_challenge = await oidcclient.calculatePKCECodeChallenge(code_verifier)
-    let url = null
-    let parameters = {}
+  if (proceed) {
+    let client_id = ''
+    let client_secret = ''
+    let scope = ''
+    let base_url = ''
+    let config = null
     if (doc.type === 'epic') {
-      parameters = {
-        redirect_uri: urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
-        scope: scope,
-        code_challenge: code_challenge,
-        state: req.query.proxystate,
-        aud: doc.fhir_url,
-        code_challenge_method: 'S256'
+      if (process.env.OPENEPIC_CLIENT_ID === null) {
+        objectPath.set(doc, 'error', 'OpenEpic Client ID is not set')
+        await db.put(doc)
+        res.redirect(doc.response_uri)
+      }
+      if (!objectPath.has(doc, 'fhir_url')) {
+        objectPath.set(doc, 'error', 'fhir_url is not set')
+        await db.put(doc)
+        res.redirect(doc.response_uri)
+      }
+      client_id = process.env.OPENEPIC_CLIENT_ID
+      if (doc.fhir_url === 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/') {
+        if (process.env.OPENEPIC_SANDBOX_CLIENT_ID === null) {
+          objectPath.set(doc, 'error', 'OpenEpic Sandbox Client ID is not set')
+          await db.put(doc)
+          res.redirect(doc.response_uri)
+        }
+        client_id = process.env.OPENEPIC_SANDBOX_CLIENT_ID
+      }
+      scope = 'openid patient/*.read user/*.* profile launch launch/patient offline_access online_access'
+      try {
+        config = await oidcclient.discovery(
+          new URL(doc.fhir_url + '.well-known/openid-configuration'),
+          client_id,
+          '',
+          oidcclient.None()
+        )
+      } catch (e) {
+        objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
+        await db.put(doc)
+        res.redirect(doc.response_uri)
+        proceed = false
       }
     } else {
-      parameters = {
-        redirect_uri: urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
-        scope: scope,
-        code_challenge: code_challenge,
-        state: req.query.proxystate,
-        code_challenge_method: 'S256'
+      if (doc.type === 'cms_bluebutton_sandbox') {
+        if (process.env.CMS_BLUEBUTTON_SANDBOX_CLIENT_ID === null) {
+          objectPath.set(doc, 'error', 'CMS Bluebuton Sandbox credentials are not set')
+          await db.put(doc)
+          res.redirect(doc.response_uri)
+        }
+        client_id = process.env.CMS_BLUEBUTTON_SANDBOX_CLIENT_ID
+        client_secret = process.env.CMS_BLUEBUTTON_SANDBOX_CLIENT_SECRET
+        base_url = 'https://sandbox.bluebutton.cms.gov'
+        // var resource_url = base_url + '/v1/fhir/Patient/20140000008325'
+      }
+      if (doc.type === 'cms_bluebutton') {
+        if (process.env.CMS_BLUEBUTTON_CLIENT_ID === null) {
+          objectPath.set(doc, 'error', 'CMS Bluebuton credentials are not set')
+          await db.put(doc)
+          res.redirect(doc.response_uri)
+        }
+        client_id = process.env.CMS_BLUEBUTTON_CLIENT_ID
+        client_secret = process.env.CMS_BLUEBUTTON_CLIENT_SECRET
+        base_url = 'https://api.bluebutton.cms.gov'
+      }
+      scope = 'patient/Patient.read patient/ExplanationOfBenefit.read patient/Coverage.read profile'
+      try {
+        config = await oidcclient.discovery(
+          new URL(base_url + '/.well-known/openid-configuration'),
+          client_id,
+          client_secret
+        )
+      } catch (e) {
+        objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
+        await db.put(doc)
+        res.redirect(doc.response_uri)
+        proceed = false
       }
     }
-    console.log(config)
-    if (config === null) {
-      console.log(doc)
-      res.status(200).send('workflow is broken')
+    if (objectPath.has(req, 'query.proxystate')) {
+      if (proceed) {
+        const code_verifier = oidcclient.randomPKCECodeVerifier()
+        const code_challenge = await oidcclient.calculatePKCECodeChallenge(code_verifier)
+        let url = null
+        let parameters = {}
+        if (doc.type === 'epic') {
+          parameters = {
+            redirect_uri: urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
+            scope: scope,
+            code_challenge: code_challenge,
+            state: req.query.proxystate,
+            aud: doc.fhir_url,
+            code_challenge_method: 'S256'
+          }
+        } else {
+          parameters = {
+            redirect_uri: urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
+            scope: scope,
+            code_challenge: code_challenge,
+            state: req.query.proxystate,
+            code_challenge_method: 'S256'
+          }
+        }
+        console.log(config)
+        url = oidcclient.buildAuthorizationUrl(config, parameters)
+        objectPath.set(doc, 'code_verifier', code_verifier)
+        await db.put(doc)
+        res.redirect(url)
+      }
     } else {
-      url = oidcclient.buildAuthorizationUrl(config, parameters)
-      objectPath.set(doc, 'code_verifier', code_verifier)
-      await db.put(doc)
-      res.redirect(url)
-    }
-  } else {
-    const check = {
-      pkceCodeVerifier: doc.code_verifier,
-      expectedState: req.query.state
-    }
-    try {
-      let tokenSet = null
-      if (doc.type === 'epic') {
-        tokenSet = await oidcclient.authorizationCodeGrant(
-          config,
-          new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
-          check
-        )
-        console.log('validated ID Token claims %j', tokenSet.claims())
-      } else {
-        tokenSet = await oidcclient.authorizationCodeGrant(
-          config,
-          new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
-          check
-        )
+      const check = {
+        pkceCodeVerifier: doc.code_verifier,
+        expectedState: req.query.state
       }
-      console.log('received and validated tokens %j', tokenSet)
-      objectPath.set(doc, 'access_token', tokenSet.access_token)
-      if (doc.type === 'epic') {
-        objectPath.set(doc, 'patient_token', tokenSet.patient)
-      } else {
-        objectPath.set(doc, 'patient_token', tokenSet.patient_token)
-        objectPath.set(doc, 'refresh_token', tokenSet.refresh_token)
+      try {
+        let tokenSet = null
+        if (doc.type === 'epic') {
+          tokenSet = await oidcclient.authorizationCodeGrant(
+            config,
+            new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
+            check
+          )
+          console.log('validated ID Token claims %j', tokenSet.claims())
+        } else {
+          tokenSet = await oidcclient.authorizationCodeGrant(
+            config,
+            new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
+            check
+          )
+        }
+        console.log('received and validated tokens %j', tokenSet)
+        objectPath.set(doc, 'access_token', tokenSet.access_token)
+        if (doc.type === 'epic') {
+          objectPath.set(doc, 'patient_token', tokenSet.patient)
+        } else {
+          objectPath.set(doc, 'patient_token', tokenSet.patient_token)
+          objectPath.set(doc, 'refresh_token', tokenSet.refresh_token)
+        }
+        await db.put(doc)
+        res.redirect(doc.response_uri)
+      } catch (e) {
+        console.log(e)
+        res.status(200).json(e)
       }
-      await db.put(doc)
-      res.redirect(doc.response_uri)
-    } catch (e) {
-      console.log(e)
-      res.status(200).json(e)
     }
   }
 })
