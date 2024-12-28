@@ -259,7 +259,7 @@ app.post('/credential', async(req, res) => {
                           vc: result.verifiableCredential
                         }
                         try {
-                          const jwt_vc = await createJWT(vcIssuerConf.credential_issuer, payload, 'ES256', true)
+                          const jwt_vc = await createJWT(result.verifiableCredential.issuer, payload, 'ES256', true)
                           const response = {
                             // 'credentials': [{ 'credential': jwt_vc }]
                             'credential': jwt_vc,
