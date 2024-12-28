@@ -123,49 +123,12 @@ async function createJWT(iss, payload=null, alg='RS256', key_header=false) {
       use_key = filter_keys[0]
     }
   }
-  console.log(use_key)
   const rsaPrivateKey = await jose.importJWK(use_key.privateKey, alg)
-  const payload_vc = {
-  //   "vc": {
-  //     "@context": [
-  //       "https://www.w3.org/2018/credentials/v1",
-  //       "https://www.w3.org/2018/credentials/examples/v1"
-  //     ],
-  //     "id": "http://example.edu/credentials/3732",
-  //     "type": [
-  //       "VerifiableCredential",
-  //       "UniversityDegreeCredential"
-  //     ],
-  //     "issuer": "https://example.edu/issuers/565049",
-  //     "issuanceDate": "2010-01-01T00:00:00Z",
-  //     "credentialSubject": {
-  //       "id": "did:example:ebfeb1f712ebc6f1c276e12ec21",
-  //       "degree": {
-  //         "type": "BachelorDegree",
-  //         "name": "Bachelor of Science and Arts"
-  //       }
-  //     }
-  //   },
-  //   // app specific payload
-  //   "_couchdb.roles": ["_admin"],
-  //   "_nosh": {
-  //     "role": "provider" // provider, patient, support, proxy
-  //   }
-  }
-  let payload_final = {}
-  if (payload !== null) {
-    payload_final = {
-      // ...payload_vc,
-      ...payload
-    }
-  } else {
-    payload_final = payload_vc
-  }
   const header = { alg: alg }
   if (key_header) {
     objectPath.set(header, 'jwk', use_key.publicKey)
   }
-  const jwt = await new jose.SignJWT(payload_final)
+  const jwt = await new jose.SignJWT(payload)
     .setProtectedHeader(header)
     .setIssuedAt()
     .setIssuer(iss)
@@ -267,12 +230,14 @@ async function didkitIssue_alt(credentialSubject) {
   }
 }
 
-async function didkitIssue(credentialSubject, type) {
+async function didkitIssue(credentialSubject, type, issuer='') {
   const opts = {headers: {'Content-Type': 'application/json'}}
   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'didkit', settings.couchdb_auth)
   try {
     const result = await db.get('did_doc')
-    console.log(credentialSubject)
+    if (issuer === '') {
+      issuer = result.id
+    }
     const body = {
       "credential": {
         "@context": [
@@ -294,7 +259,7 @@ async function didkitIssue(credentialSubject, type) {
         ],
         // "id": "http://example.org/credentials/3731", //need to set
         "type": ["VerifiableCredential", type],
-        "issuer": result.id,
+        "issuer": issuer,
         "issuanceDate": moment().format('YYYY-MM-DDTHH:mm:ss.SSSZ'),
         "credentialSubject": credentialSubject
       },

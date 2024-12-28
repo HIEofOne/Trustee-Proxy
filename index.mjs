@@ -254,12 +254,14 @@ app.post('/credential', async(req, res) => {
                         objectPath.set(result, 'new_c_nonce', new_c_nonce)
                         objectPath.set(result, 'new_c_nonce_timestamp', new_c_nonce_timestamp)
                         await vc_db.put(result)
-                        const payload = {
-                          // vc: {'1': '1'}
-                          vc: result.verifiableCredential
-                        }
                         try {
-                          const jwt_vc = await createJWT(result.verifiableCredential.issuer, payload, 'ES256', true)
+                          const vc_doc = await didkitIssue(credentialSubject, 'NPICredential', header.kid)
+                          objectPath.set(result, 'verfiableCredential', vc_doc.verifiableCredential)
+                          const payload = {
+                            vc: vc_doc.verifiableCredential
+                          }
+                          console.log(payload)
+                          const jwt_vc = await createJWT(header.kid, payload, 'ES256', true)
                           const response = {
                             // 'credentials': [{ 'credential': jwt_vc }]
                             'credential': jwt_vc,
@@ -428,10 +430,11 @@ app.get('/doximity_redirect', async(req, res) => {
         }
         const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
         await vc_db.info()
-        const vc_doc = await didkitIssue(credentialSubject, 'NPICredential')
+        const vc_doc = {}
         const preauth_code = uuidv4()
         const offer_reference = uuidv4()
         objectPath.set(vc_doc, '_id', preauth_code)
+        objectPath.set(vc_doc, 'credential_subject', credentialSubject)
         objectPath.set(vc_doc, 'offer_reference', offer_reference)
         objectPath.set(vc_doc, 'timestamp', Date().now)
         objectPath.set(vc_doc, 'credential_type', 'NPICredential')
