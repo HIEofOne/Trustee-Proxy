@@ -262,9 +262,9 @@ app.post('/credential', async(req, res) => {
                           const response = {
                             // 'credentials': [{ 'credential': jwt_vc }]
                             'credential': jwt_vc,
-                            'format': 'jwt_vc',
-                            new_c_nonce,
-                            c_nonce_expires_in: 300
+                            // 'format': 'jwt_vc',
+                            // new_c_nonce,
+                            // c_nonce_expires_in: 300
                           }
                           console.log(response)
                           res.status(200).json(response)
@@ -354,11 +354,6 @@ app.get('/did_generate', async(req, res) => {
   }
 })
 
-// app.get('/did_vc_issue', async(req, res) => {
-//   const ret = await didkitIssue()
-//   res.status(200).json(ret)
-// })
-
 app.post('/did_vc_verify', async (req, res) => {
   const ret = await didkitVerify(req.body.jwt)
   res.status(200).json(ret)
@@ -388,9 +383,6 @@ app.get('/doximity', async(req, res) => {
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'doximity', opts)
   await db.put(doc)
-  // console.log(url)
-  // const url_fix = url.replaceAll('profile%3A', 'profile:').replaceAll('read%3A', 'read:')
-  // console.log(url_fix)
   res.redirect(url)
 })
 
@@ -448,10 +440,8 @@ app.get('/doximity_redirect', async(req, res) => {
         objectPath.set(vc_doc, 'tx_code', tx_code)
         await vc_db.put(vc_doc)
         const uri = 'credential_offer_uri=' + encodeURIComponent(process.env.DOMAIN + "/credential_offer/" + offer_reference)
-        // const uri = 'issuer=' + encodeURIComponent(vcIssuerConf.credential_issuer) + '&credential_type=NPICredential&pre-authorized_code=' + preauth_code + '&user_pin_required=false'
         const vc = {
           uri: 'openid-credential-offer://?' + uri,
-          // uri: 'openid-initiate-issuance://?' + uri,
           uri_enc: uri,
           tx_code1: tx_code_split[0],
           tx_code2: tx_code_split[1],
