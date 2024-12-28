@@ -755,7 +755,7 @@ app.post('/token', async(req, res) => {
           }
           try {
             const access_token = await createJWT(vcIssuerConf.credential_issuer, payload)
-            const interval = getNumberOrUndefined(process.env.INTERVAL) ?? 300000
+            // const interval = getNumberOrUndefined(process.env.INTERVAL) ?? 300000
             const c_nonce = uuidv4()
             objectPath.set(result, 'c_nonce', c_nonce)
             objectPath.set(result, 'c_nonce_timestamp', Date.now())
@@ -764,10 +764,10 @@ app.post('/token', async(req, res) => {
               access_token,
               token_type: 'bearer',
               expires_in: 300,
-              c_nonce,
-              c_nonce_expires_in: 300000,
-              authorization_pending: false,
-              interval,
+              // c_nonce,
+              // c_nonce_expires_in: 300000,
+              // authorization_pending: false,
+              // interval,
             }
             console.log(response)
             res.status(200).json(response)
