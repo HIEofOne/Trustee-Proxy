@@ -20,7 +20,7 @@ PouchDB.plugin(PouchDBFind)
 import QRCode from 'qrcode'
 import { PassThrough } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
-import { SiweMessage } from 'siwe';
+import { SiweMessage } from 'siwe'
 
 import { createJWT, couchdbDatabase, couchdbInstall, didkitIssue, didkitVerify, determinePath, getNumberOrUndefined, urlFix, verify } from './core.mjs'
 import settings from './settings.mjs'
@@ -255,7 +255,8 @@ app.post('/credential', async(req, res) => {
                         objectPath.set(result, 'new_c_nonce_timestamp', new_c_nonce_timestamp)
                         await vc_db.put(result)
                         const payload = {
-                          vc: result.verifiableCredential
+                          vc: {'1': '1'}
+                          // vc: result.verifiableCredential
                         }
                         try {
                           const jwt_vc = await createJWT(payload, result.verifiableCredential, 'ES256', true)
