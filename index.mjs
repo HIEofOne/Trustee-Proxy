@@ -255,11 +255,11 @@ app.post('/credential', async(req, res) => {
                         objectPath.set(result, 'new_c_nonce_timestamp', new_c_nonce_timestamp)
                         await vc_db.put(result)
                         const payload = {
-                          vc: {'1': '1'}
-                          // vc: result.verifiableCredential
+                          // vc: {'1': '1'}
+                          vc: result.verifiableCredential
                         }
                         try {
-                          const jwt_vc = await createJWT(payload, result.verifiableCredential, 'ES256', true)
+                          const jwt_vc = await createJWT(vcIssuerConf.credential_issuer, payload, 'ES256', true)
                           const response = {
                             // 'credentials': [{ 'credential': jwt_vc }]
                             'credential': jwt_vc,
