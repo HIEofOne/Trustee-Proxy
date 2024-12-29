@@ -17,18 +17,18 @@ import fs from 'fs'
 
 const INFURA_PROJECT_ID = process.env.INFURIA_API_KEY
 let KMS_SECRET_KEY = null
-if (fs.existsSync('./proxy/kms')) {
-  KMS_SECRET_KEY = fs.readFileSync('./proxy/kms', 'utf8')
+if (fs.existsSync('/data/kms')) {
+  KMS_SECRET_KEY = fs.readFileSync('/data/kms', 'utf8')
   console.log(KMS_SECRET_KEY)
 } else {
   KMS_SECRET_KEY = await SecretBox.createSecretKey()
   console.log(KMS_SECRET_KEY)
-  fs.writeFileSync('./proxy/kms', KMS_SECRET_KEY)
+  fs.writeFileSync('/data/kms', KMS_SECRET_KEY)
 }
 
 const dbConnection = new DataSource({
   type: 'sqlite',
-  database: './proxy/database.sqlite',
+  database: '/data/database.sqlite',
   synchronize: false,
   migrations,
   migrationsRun: true,

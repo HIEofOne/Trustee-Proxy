@@ -72,7 +72,7 @@ services:
       - ./.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./proxy:/usr/src/app/proxy
+      - ./proxydata:/data
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_default"
