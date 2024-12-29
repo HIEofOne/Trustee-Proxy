@@ -255,13 +255,13 @@ app.post('/credential', async(req, res) => {
                         objectPath.set(result, 'new_c_nonce_timestamp', new_c_nonce_timestamp)
                         await vc_db.put(result)
                         try {
-                          const vc_doc = await didkitIssue(result.credential_subject, 'NPICredential', header.kid)
+                          const vc_doc = await didkitIssue(result.credential_subject, 'NPICredential')
                           objectPath.set(result, 'verfiableCredential', vc_doc.verifiableCredential)
                           const payload = {
                             vc: vc_doc.verifiableCredential
                           }
                           console.log(payload)
-                          const jwt_vc = await createJWT(header.kid, payload, 'ES256', true)
+                          const jwt_vc = await createJWT(vcIssuerConf.credential_issuer, payload, 'ES256', true)
                           const response = {
                             // 'credentials': [{ 'credential': jwt_vc }]
                             'credential': jwt_vc,
