@@ -133,6 +133,34 @@ app.use(cookieParser())
 app.use(express.static(client))
 app.set('view engine', 'hbs')
 
+app.get('/test', async(req, res) => {
+  try {
+    const preAuthorizedCode = 'e385e8fb-94de-4531-b475-e14541c2a158'
+    const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
+    const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
+    const result = await vc_db.get(preAuthorizedCode)
+    const agent = await import('./veramo.mjs')
+    const identifier = await agent.didManagerGetOrCreate({ alias: 'default' })
+    const verifiableCredential = await agent.createVerifiableCredential({
+      credential: {
+        issuer: { id: identifier.did },
+        type: ['NPICredential'],
+        credentialSubject: result.credential_subject
+      },
+      proofFormat: 'jwt'
+    })
+    objectPath.set(result, 'verfiableCredential', verifiableCredential)
+    const response = {
+      'credential': verifiableCredential.proof.jwt,
+    }
+    console.log(response)
+    res.status(200).json(response)
+  } catch (e) {
+    console.log(e)
+    res.status(400).json({error: 'invalid_token'})
+  }
+})
+
 app.post('/ssx', async(req, res) => {
   const {message, signature} = req.body
   try {
