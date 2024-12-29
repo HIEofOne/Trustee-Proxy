@@ -123,6 +123,9 @@ async function createJWT(iss, payload=null, alg='RS256', key_header=false) {
       use_key = filter_keys[0]
     }
   }
+  const db = new PouchDB(urlFix(settings.couchdb_uri) + 'didkit', settings.couchdb_auth)
+  const didkey = await db.get('issuer_key')
+  console.log(didkey)
   const rsaPrivateKey = await jose.importJWK(use_key.privateKey, alg)
   const header = { alg: alg }
   if (key_header) {
