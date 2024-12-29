@@ -255,7 +255,7 @@ app.post('/credential', async(req, res) => {
                         objectPath.set(result, 'new_c_nonce_timestamp', new_c_nonce_timestamp)
                         await vc_db.put(result)
                         try {
-                          const vc_doc = await didkitIssue(result.creddential_subject, 'NPICredential', header.kid)
+                          const vc_doc = await didkitIssue(result.credential_subject, 'NPICredential', header.kid)
                           objectPath.set(result, 'verfiableCredential', vc_doc.verifiableCredential)
                           const payload = {
                             vc: vc_doc.verifiableCredential
