@@ -139,7 +139,7 @@ app.get('/test', async(req, res) => {
     const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
     const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
     const result = await vc_db.get(preAuthorizedCode)
-    const agent = await import('./veramo.mjs')
+    const { agent } = await import('./veramo.mjs')
     const identifier = await agent.didManagerGetOrCreate({ alias: 'default' })
     const verifiableCredential = await agent.createVerifiableCredential({
       credential: {
@@ -283,7 +283,7 @@ app.post('/credential', async(req, res) => {
                         objectPath.set(result, 'new_c_nonce_timestamp', new_c_nonce_timestamp)
                         await vc_db.put(result)
                         try {
-                          const agent = await import('./veramo.mjs')
+                          const { agent } = await import('./veramo.mjs')
                           const identifier = await agent.didManagerGetOrCreate({ alias: 'default' })
                           const verifiableCredential = await agent.createVerifiableCredential({
                             credential: {
