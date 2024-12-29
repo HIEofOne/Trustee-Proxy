@@ -21,9 +21,9 @@ if (fs.existsSync('/data/kms')) {
   KMS_SECRET_KEY = fs.readFileSync('/data/kms', 'utf8')
   console.log(KMS_SECRET_KEY)
 } else {
-  KMS_SECRET_KEY = await SecretBox.createSecretKey()
-  console.log(KMS_SECRET_KEY)
-  fs.writeFileSync('/data/kms', KMS_SECRET_KEY)
+  // KMS_SECRET_KEY = await SecretBox.createSecretKey()
+  // console.log(KMS_SECRET_KEY)
+  // fs.writeFileSync('/data/kms', KMS_SECRET_KEY)
 }
 
 const dbConnection = new DataSource({
