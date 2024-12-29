@@ -20,6 +20,7 @@ if [ -d "${HOME}/.nvm/.git" ]; then
     read -e -p "Enter your CMS Bluebutton Sandbox Client Secret: " -i "" CMS_BLUEBUTTON_SANDBOX_CLIENT_SECRET
     read -e -p "Enter your CMS Bluebutton Client ID: " -i "" CMS_BLUEBUTTON_CLIENT_ID
     read -e -p "Enter your CMS Bluebutton Client Secret: " -i "" CMS_BLUEBUTTON_CLIENT_SECRET
+    read -e -p "Enter your Infuria API Key: " -i "" INFURIA_API_KEY
     sed -i "s/example.com/$ROOT_DOMAIN/" ./docker-compose.yml
     sed -i "s/example@example.com/$EMAIL/" ./docker-compose.yml
     cp ./env ./.env
@@ -34,6 +35,7 @@ if [ -d "${HOME}/.nvm/.git" ]; then
     sed -i '/^CMS_BLUEBUTTON_SANDBOX_CLIENT_SECRET=/s/=.*/='"$CMS_BLUEBUTTON_SANDBOX_CLIENT_SECRET"'/' ./.env
     sed -i '/^CMS_BLUEBUTTON_CLIENT_ID=/s/=.*/='"$CMS_BLUEBUTTON_CLIENT_ID"'/' ./.env
     sed -i '/^CMS_BLUEBUTTON_CLIENT_SECRET=/s/=.*/='"$CMS_BLUEBUTTON_CLIENT_SECRET"'/' ./.env
+    sed -i '/^INFURIA_API_KEY=/s/=.*/='"$INFURIA_API_KEY"'/' ./.env
   fi
   curl -X PUT http://admin:$COUCHDB_PASSWORD@localhost:5984/didkit
   KEY=`/usr/bin/docker run ghcr.io/spruceid/didkit-cli:latest generate-ed25519-key`
@@ -56,7 +58,7 @@ else
   apt-get update
   apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
   # get nvm
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
   echo "Now is also a good time to make sure your domain name is associated with the public IP of this droplet."
   echo "Afterwards, logout and log back in and run cd Trustee-Proxy;./do-install.sh again"
   exit 0

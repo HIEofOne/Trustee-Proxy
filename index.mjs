@@ -23,6 +23,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { SiweMessage } from 'siwe'
 
 import { createJWT, couchdbDatabase, couchdbInstall, didkitIssue, didkitVerify, determinePath, getNumberOrUndefined, urlFix, verify } from './core.mjs'
+import { agent } from './veramo.mjs'
 import settings from './settings.mjs'
 const app = express()
 const __filename = fileURLToPath(import.meta.url)
@@ -39,7 +40,7 @@ const vcIssuerConf = {
     "OpenBadgeCredential": {
       "format": "jwt_vc_json",
       "cryptographic_binding_methods_supported": ["did"],
-      "credential_signing_alg_values_supported": ["Ed25519Signature2018"],
+      "credential_signing_alg_values_supported": ["EdDSA"],
       "credential_definition": {
         "type": [
           "VerifiableCredential",
@@ -51,7 +52,7 @@ const vcIssuerConf = {
     "NPICredential": {
       "format": "jwt_vc_json",
       "cryptographic_binding_methods_supported": ["did"],
-      "credential_signing_alg_values_supported": ["Ed25519Signature2018"],
+      "credential_signing_alg_values_supported": ["EdDSA"],
       "credential_definition": {
         "type": [
           "VerifiableCredential",
@@ -255,19 +256,18 @@ app.post('/credential', async(req, res) => {
                         objectPath.set(result, 'new_c_nonce_timestamp', new_c_nonce_timestamp)
                         await vc_db.put(result)
                         try {
-                          const vc_doc = await didkitIssue(result.credential_subject, 'NPICredential')
-                          objectPath.set(result, 'verfiableCredential', vc_doc.verifiableCredential)
-                          const payload = {
-                            vc: vc_doc.verifiableCredential
-                          }
-                          console.log(payload)
-                          const jwt_vc = await createJWT(vc_doc.verifiableCredential.issuer, payload, 'ES256', true)
+                          const identifier = await agent.didManagerGetOrCreate({ alias: 'default' })
+                          const verifiableCredential = await agent.createVerifiableCredential({
+                            credential: {
+                              issuer: { id: identifier.did },
+                              type: ['NPICredential'],
+                              credentialSubject: result.credential_subject
+                            },
+                            proofFormat: 'jwt'
+                          })
+                          objectPath.set(result, 'verfiableCredential', verifiableCredential)
                           const response = {
-                            // 'credentials': [{ 'credential': jwt_vc }]
-                            'credential': jwt_vc,
-                            // 'format': 'jwt_vc',
-                            // new_c_nonce,
-                            // c_nonce_expires_in: 300
+                            'credential': verifiableCredential.proof.jwt,
                           }
                           console.log(response)
                           res.status(200).json(response)
