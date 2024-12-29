@@ -39,7 +39,7 @@ const vcIssuerConf = {
     "OpenBadgeCredential": {
       "format": "jwt_vc_json",
       "cryptographic_binding_methods_supported": ["did"],
-      "credential_signing_alg_values_supported": ["ES256","ES256K", "RS256"],
+      "credential_signing_alg_values_supported": ["Ed25519Signature2018"],
       "credential_definition": {
         "type": [
           "VerifiableCredential",
@@ -51,7 +51,7 @@ const vcIssuerConf = {
     "NPICredential": {
       "format": "jwt_vc_json",
       "cryptographic_binding_methods_supported": ["did"],
-      "credential_signing_alg_values_supported": ["ES256","ES256K", "RS256"],
+      "credential_signing_alg_values_supported": ["Ed25519Signature2018"],
       "credential_definition": {
         "type": [
           "VerifiableCredential",
