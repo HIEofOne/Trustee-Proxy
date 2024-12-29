@@ -17,14 +17,12 @@ import fs from 'fs'
 
 const INFURA_PROJECT_ID = process.env.INFURIA_API_KEY
 let KMS_SECRET_KEY = null
-try {
+if (fs.existsSync('./proxy/kms')) {
   KMS_SECRET_KEY = fs.readFileSync('./proxy/kms', 'utf8')
-  console.log('read from file')
   console.log(KMS_SECRET_KEY)
-} catch (err) {
+} else {
   KMS_SECRET_KEY = await SecretBox.createSecretKey()
   console.log(KMS_SECRET_KEY)
-  // KMS_SECRET_KEY = 'cd198a03032e8d072066e3195b8e1e176e78b5cfbb378a5fc00ae4ded5c002e9'
   fs.writeFileSync('./proxy/kms', KMS_SECRET_KEY)
 }
 
