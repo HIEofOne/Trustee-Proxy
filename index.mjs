@@ -23,7 +23,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { SiweMessage } from 'siwe'
 
 import { createJWT, couchdbDatabase, couchdbInstall, didkitIssue, didkitVerify, determinePath, getNumberOrUndefined, urlFix, verify } from './core.mjs'
-import { agent } from './veramo.mjs'
 import settings from './settings.mjs'
 const app = express()
 const __filename = fileURLToPath(import.meta.url)
@@ -256,6 +255,7 @@ app.post('/credential', async(req, res) => {
                         objectPath.set(result, 'new_c_nonce_timestamp', new_c_nonce_timestamp)
                         await vc_db.put(result)
                         try {
+                          const agent = await import('./veramo.mjs')
                           const identifier = await agent.didManagerGetOrCreate({ alias: 'default' })
                           const verifiableCredential = await agent.createVerifiableCredential({
                             credential: {
