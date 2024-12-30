@@ -1,4 +1,3 @@
-import Docker from 'dockerode'
 import dotenv from 'dotenv'
 dotenv.config()
 import express from 'express'
@@ -15,7 +14,6 @@ import {fileURLToPath} from 'url'
 import * as oidcclient from 'openid-client'
 import PouchDB from 'pouchdb'
 import PouchDBFind from 'pouchdb-find'
-import streams from 'memory-streams'
 PouchDB.plugin(PouchDBFind)
 import QRCode from 'qrcode'
 import { PassThrough } from 'stream'
@@ -23,7 +21,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { SiweMessage } from 'siwe'
 import { agent } from './veramo.mjs'
 
-import { createJWT, couchdbDatabase, couchdbInstall, didkitIssue, didkitVerify, determinePath, getNumberOrUndefined, urlFix, verify } from './core.mjs'
+import { createJWT, couchdbDatabase, couchdbInstall, getNumberOrUndefined, urlFix, verify } from './core.mjs'
 import settings from './settings.mjs'
 const app = express()
 const __filename = fileURLToPath(import.meta.url)
@@ -148,26 +146,6 @@ app.post('/ssx', async(req, res) => {
   }
 })
 
-app.get('/.well-known/did.json', async(req, res) => {
-  const url = new URL(process.env.DOMAIN)
-  const db = new PouchDB(urlFix(settings.couchdb_uri) + 'didkit', settings.couchdb_auth)
-  try {
-    const result = await db.get('did_doc')
-    console.log(result)
-    const jwk = JSON.parse(JSON.stringify(result))
-    objectPath.del(jwk, '_id')
-    objectPath.del(jwk, '_rev')
-    const did_web = "did:web:" + url.hostname
-    objectPath.set(jwk, 'verificationMethod.0.id', did_web)
-    objectPath.set(jwk, 'verificationMethod.0.controller', did_web)
-    objectPath.set(jwk, 'authentication.0', did_web)
-    objectPath.set(jwk, 'assertionMethod.0', did_web)
-    res.status(200).json(jwk)
-  } catch (e) {
-    res.status(200).json({error: "not found", message: e})
-  }
-})
-
 app.get('/.well-known/openid-configuration', (req, res) => {
   res.set({
     'Cache-Control': 'no-store',
@@ -184,26 +162,7 @@ app.get('/.well-known/openid-credential-issuer', (req, res) => {
   res.status(200).json(vcIssuerConf)
 })
 
-// app.get('/didstart', async(req, res) => {
-//   const did = createDIDKey()
-//   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'keys', settings.couchdb_auth)
-//   const result = await db.find({
-//     selector: {_id: {"$gte": null}, privateKey: {"$gte": null}}
-//   })
-//   if (result.docs.length === 0) {
-//     res.status(200).json({message: 'Install first'})
-//   } else {
-//     var doc = result.docs[0]
-//     objectPath.set(doc, 'didKey', did.didKey)
-//     objectPath.set(doc, 'didJWK', did.didJWK)
-//     await db.put(doc)
-//     res.status(200).json({message: 'DID Key install complete'})
-//   }
-// })
-
 app.post('/credential', async(req, res) => {
-  console.log(req.body)
-  console.log(req.headers)
   const authHeader = req.headers.authorization
   if (!authHeader) {
     console.log('no header')
@@ -211,7 +170,6 @@ app.post('/credential', async(req, res) => {
   } else {
     const jwt = authHeader.split(' ')[1]
     const response = await verify(jwt)
-    console.log(response)
     if (response.status === 'isValid') {
       if (objectPath.has(response.payload.preAuthorizedCode)) {
         const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
@@ -228,8 +186,6 @@ app.post('/credential', async(req, res) => {
             } else {
               const header = jose.decodeProtectedHeader(req.body.proof.jwt)
               const payload = jose.decodeJwt(req.body.proof.jwt)
-              console.log(payload)
-              console.log(header)
               if (header.typ !== 'openid4vci-proof+jwt' && header.typ !== 'jwt') {
                 console.log('invalid jwt header type')
                 res.status(400).json({error: 'invalid_request'})
@@ -256,7 +212,6 @@ app.post('/credential', async(req, res) => {
                         objectPath.set(result, 'new_c_nonce_timestamp', new_c_nonce_timestamp)
                         await vc_db.put(result)
                         try {
-                          const { agent } = await import('./veramo.mjs')
                           const identifier = await agent.didManagerGetOrCreate({ alias: 'default' })
                           const verifiableCredential = await agent.createVerifiableCredential({
                             credential: {
@@ -299,7 +254,6 @@ app.post('/credential', async(req, res) => {
 })
 
 app.get('/credential_offer/:offer_reference', async(req, res) => {
-  console.log(req.params.offer_reference)
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
   const result = await vc_db.find({selector: {'offer_reference': {$eq: req.params.offer_reference}}})
@@ -325,42 +279,6 @@ app.get('/credential_offer/:offer_reference', async(req, res) => {
   } else {
     res.status(400).json({error: 'no_offers'})
   }
-})
-
-app.get('/did_generate', async(req, res) => {
-  const docker = new Docker()
-  const key = new streams.WritableStream()
-  const did = new streams.WritableStream()
-  const doc = new streams.WritableStream()
-  try {
-    await docker.run('ghcr.io/spruceid/didkit-cli:latest', ['generate-ed25519-key'], key)
-    const key_final = key.toString()
-    try {
-      await docker.run('ghcr.io/spruceid/didkit-cli:latest', ['key-to-did', 'key', '-j', key_final], did)
-      const did_final = did.toString().replace( /[\r\n]+/gm, "" )
-      try {
-        await docker.run('ghcr.io/spruceid/didkit-cli:latest', ['did-resolve', did_final], doc)
-        const doc_final = doc.toString()
-        const ret = {
-          key: JSON.parse(key_final),
-          did: did_final,
-          doc: JSON.parse(doc_final)
-        }
-        res.status(200).json(ret)
-      } catch (e) {
-        console.log(e)
-      }
-    } catch (e) {
-      console.log(e)
-    }
-  } catch (e) {
-    console.log(e)
-  }
-})
-
-app.post('/did_vc_verify', async (req, res) => {
-  const ret = await didkitVerify(req.body.jwt)
-  res.status(200).json(ret)
 })
 
 app.get('/doximity', async(req, res) => {
@@ -470,12 +388,6 @@ app.get('/jwks', (req, res) => {
     "keys": JSON.parse(process.env.DIDKIT_HTTP_ISSUER_KEYS)
   }
   res.status(200).json(ret)
-})
-
-app.get('/identifiers/:uri', async(req, res) => {
-  const opts = {headers: {'Content-Type': 'application/json'}}
-  const result = await axios.get('http://didkit:9000/identifiers/' + req.params.uri, opts)
-  res.status(200).json(result.data)
 })
 
 app.post('/oidc_relay', async(req, res) => {
@@ -760,7 +672,6 @@ app.post('/token', async(req, res) => {
           }
           try {
             const access_token = await createJWT(vcIssuerConf.credential_issuer, payload)
-            // const interval = getNumberOrUndefined(process.env.INTERVAL) ?? 300000
             const c_nonce = uuidv4()
             objectPath.set(result, 'c_nonce', c_nonce)
             objectPath.set(result, 'c_nonce_timestamp', Date.now())
@@ -768,11 +679,7 @@ app.post('/token', async(req, res) => {
             const response = {
               access_token,
               token_type: 'bearer',
-              expires_in: 300,
-              // c_nonce,
-              // c_nonce_expires_in: 300000,
-              // authorization_pending: false,
-              // interval,
+              expires_in: 300
             }
             console.log(response)
             res.status(200).json(response)

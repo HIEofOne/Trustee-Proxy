@@ -37,13 +37,6 @@ if [ -d "${HOME}/.nvm/.git" ]; then
     sed -i '/^CMS_BLUEBUTTON_CLIENT_SECRET=/s/=.*/='"$CMS_BLUEBUTTON_CLIENT_SECRET"'/' ./.env
     sed -i '/^INFURIA_API_KEY=/s/=.*/='"$INFURIA_API_KEY"'/' ./.env
   fi
-  curl -X PUT http://admin:$COUCHDB_PASSWORD@localhost:5984/didkit
-  KEY=`/usr/bin/docker run ghcr.io/spruceid/didkit-cli:latest generate-ed25519-key`
-  curl -X PUT http://admin:$COUCHDB_PASSWORD@localhost:5984/didkit/issuer_key -d "$KEY"
-  DID=`/usr/bin/docker run ghcr.io/spruceid/didkit-cli:latest key-to-did key -j $KEY`
-  DOC=`/usr/bin/docker run ghcr.io/spruceid/didkit-cli:latest did-resolve $DID`
-  curl -X PUT http://admin:$COUCHDB_PASSWORD@localhost:5984/didkit/did_doc -d "$DOC"
-  sed -i '/^DIDKIT_HTTP_ISSUER_KEYS=/s/=.*/='"[$KEY]"'/' ./.env
   mkdir dbconfig
   cd dbconfig
   curl -O https://raw.githubusercontent.com/HIEofOne/Trustee-Proxy/master/docker.ini

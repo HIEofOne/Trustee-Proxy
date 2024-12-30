@@ -2,10 +2,6 @@ import dotenv from 'dotenv'
 dotenv.config()
 import axios from 'axios'
 import crypto from 'crypto'
-// import { createJWT, decodeJWT, ES256KSigner, hexToBytes, verifyJWT } from 'did-jwt'
-// import { createVerifiableCredentialJwt, createVerifiablePresentationJwt, verifyCredential, verifyPresentation } from 'did-jwt-vc'
-// import { Resolver } from 'did-resolver'
-// import elliptic from 'elliptic'
 import * as jose from 'jose'
 import moment from 'moment'
 import objectPath from 'object-path'
@@ -14,99 +10,8 @@ import settings from './settings.mjs'
 import { v4 as uuidv4 } from 'uuid'
 import Docker from 'dockerode'
 
-// import { getResolver } from 'web-did-resolver'
-
 import PouchDBFind from 'pouchdb-find'
 PouchDB.plugin(PouchDBFind)
-
-// const jwksService = jose.createRemoteJWKSet(new URL(settings.jwks_uri))
-
-// async function createDIDIssuer() {
-//   var keys = await getKeys()
-//   const url = new URL(process.env.DOMAIN)
-//   if (keys.length > 0) {
-//     if (objectPath.has(keys[0], 'didKey')) {
-//       const signer = ES256KSigner(hexToBytes(keys[0].didKey))
-//       const issuer = {
-//         did: 'did:web:' + url.pathname,
-//         signer: signer
-//       }
-//       return issuer
-//     }
-//   }
-//   return false
-// }
-
-// function createDIDKey() {
-//   const size = parseInt(process.argv.slice(2)[0]) || 32
-//   const prv_key = crypto.randomBytes(size).toString('hex')
-//   const ec = new elliptic.ec('secp256k1')
-//   const prv = ec.keyFromPrivate(prv_key, 'hex')
-//   const pub = prv.getPublic()
-//   const x = pub.x.toBuffer().toString('base64')
-//   const y = pub.y.toBuffer().toString('base64')
-//   const jwk = {
-//     "kty":"EC",
-//     "crv":"secp256k1",
-//     "x": x,
-//     "y": y,
-//   }
-//   const ret = {didKey: prv_key, didJWK: jwk}
-//   return ret
-// }
-
-// async function createDIDSigner(name) {
-//   var keys = await getKeys()
-//   const url = new URL(process.env.DOMAIN)
-//   if (keys.length > 0) {
-//     if (objectPath.has(keys[0], 'didKey')) {
-//       const signer = ES256KSigner(hexToBytes(keys[0].didKey))
-//       const jwt = await createJWT(
-//         { aud: 'did:web:' + url.pathname, name: name },
-//         { issuer: 'did:web:' + url.pathname, signer },
-//         { alg: 'ES256K' }
-//       )
-//       return jwt
-//     }
-//   }
-//   return false
-// }
-
-// async function createDIDVC(vcPayload) {
-  // const issuer = await createDIDIssuer()
-  // const vcPayload = {
-  //   sub: 'did:web:' + url.pathname,
-  //   nbf: 1562950282,
-  //   vc: {
-  //     '@context': ['https://www.w3.org/2018/credentials/v1'],
-  //     type: ['VerifiableCredential'],
-  //     credentialSubject: {
-  //       degree: {
-  //         type: 'BachelorDegree',
-  //         name: 'Baccalauréat en musiques numériques'
-  //       }
-  //     }
-  //   }
-  // }
-  // const vcJwt = await createVerifiableCredentialJwt(vcPayload, issuer)
-  // console.log('//// Verifiable Credential:\n', vcJwt)
-  // return vcJwt
-// }
-
-// async function createDIDVP(vpPayload) {
-//   const issuer = await createDIDIssuer()
-  // const vpPayload = {
-  //   vp: {
-  //     '@context': ['https://www.w3.org/2018/credentials/v1'],
-  //     type: ['VerifiablePresentation'],
-  //     verifiableCredential: [vcJwt],
-  //     foo: "bar"
-  //   }
-  // }
-//   const vpJwt = await createVerifiablePresentationJwt(vpPayload, issuer)
-//   console.log('\n//// Verifiable Presentation:\n', vpJwt)
-//   return vpJwt
-// } 
 
 async function createJWT(iss, payload=null, alg='RS256', key_header=false) {
   // aud is audience - base url of this server
@@ -425,13 +330,6 @@ async function createKeyPair(alg='RS256') {
   return doc
 }
 
-
-// function decodeDIDJWT(jwt) {
-//   const decoded = decodeJWT(jwt)
-//   return decoded
-// console.log('\n//// JWT Decoded:\n',decoded)
-// }
-
 function equals (a, b) {
   if (a === b) {
     return true
@@ -509,19 +407,6 @@ function extractHeader({ headers }, header, opts) {
 async function getAllKeys() {
   const keys = []
   let publicKey = ''
-  // var trustee_key = null
-  // Trustee key
-  // try {
-  //   var trustee_key = await axios.get(urlFix(process.env.TRUSTEE_URL) + 'jwks')
-  // } catch (err) {
-  //   console.log(err)
-  // }
-  // if (trustee_key !== null && trustee_key.status === 200 && objectPath.has(trustee_key, 'data.keys')) {
-  //   for (var b in trustee_key.data.keys) {
-  //     keys.push(trustee_key.data.keys[b])
-  //   }
-  // }
-  // Local key
   const db = new PouchDB((settings.couchdb_uri + '/keys'), settings.couchdb_auth)
   const result = await db.find({
     selector: {_id: {"$gte": null}}
@@ -623,44 +508,5 @@ async function verify(jwt) {
   return response
 }
 
-// async function verifyDIDJWT(orignal_jwt) {
-//   const url = new URL(process.env.DOMAIN)
-//   const webResolver = getResolver()
-//   const resolver = new Resolver({
-//     ...webResolver
-//   })
-//   try {
-//     const { payload, doc, did, signer, jwt } = await verifyJWT(orignal_jwt, {
-//       resolver,
-//       audience: 'did:web:' + url.pathname
-//     })
-//     console.log('\n//// Verified:\n', payload)
-//     return payload
-//   } catch (e) {
-//     return e
-//   }
-// }
-
-// async function verifyDIDVC(vcJwt) {
-//   const resolver = new Resolver(getResolver())
-//   try {
-//     const verifiedVC = await verifyCredential(vcJwt, resolver)
-//     console.log('//// Verified Credentials:\n', verifiedVC)
-//     return verifiedVC
-//   } catch (e) {
-//     return false
-//   }
-// }
-
-// async function verifyDIDVP(vpJwt) {
-//   const resolver = new Resolver(getResolver())
-//   try {
-//     const verifiedVP = await verifyPresentation(vpJwt, resolver)
-//     console.log('\n//// Verified Presentation:\n', verifiedVP)
-//     return verifiedVP
-//   } catch (e) {
-//     return false
-//   }
-// }
 
 export { createJWT, createSigner, couchdbConfig, couchdbDatabase, couchdbInstall, determinePath, didkitIssue, didkitVerify, equals, extractComponent, extractHeader, getKeys, getNumberOrUndefined, getPIN, signatureHeader, sleep, urlFix, verify }

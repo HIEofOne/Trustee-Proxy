@@ -43,26 +43,11 @@ services:
     labels:
       - "traefik.enable=false"
       - "com.centurylinklabs.watchtower.scope=proxy"
-  didkit:
-    image: ghcr.io/spruceid/didkit-http:latest
-    container_name: didkit
-    restart: always
-    ports:
-      - 3000:3000
-    depends_on:
-      - router
-      - watchtower
-    env_file:
-      - ./.env
-    labels:
-      - "traefik.enable=false"
-      - "com.centurylinklabs.watchtower.scope=proxy"
   proxy:
     image: shihjay2/trusteeproxy 
     container_name: proxy 
     links:
       - couchdb
-      - didkit
     restart: always
     depends_on:
       - couchdb
