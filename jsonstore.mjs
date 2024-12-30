@@ -20,7 +20,10 @@ export class JsonFileStore {
   constructor(file) {
     this.file = file
     this.notifyUpdate = async(oldState, newState) => {
-      await this.save(newState)
+      console.log(newState)
+      if (newState !== '') {
+        await this.save(newState)
+      }
     }
     this.dids = {}
     this.keys = {}
