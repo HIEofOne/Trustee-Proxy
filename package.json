@@ -43,5 +43,8 @@
     "qrcode": "^1.5.3",
     "uuid": "^9.0.0",
     "web-did-resolver": "^2.0.27"
+  },
+  "overrides": {
+    "uri-js": "npm:uri-js-replace"
   }
 }
