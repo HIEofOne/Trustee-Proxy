@@ -23,7 +23,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { SiweMessage } from 'siwe'
 // import { agent } from './veramo.mjs'
 import { DataSource } from 'typeorm'
-import { Entities } from '@veramo/data-store'
+import { Entities, migrations } from '@veramo/data-store'
 
 import { createJWT, couchdbDatabase, couchdbInstall, didkitIssue, didkitVerify, determinePath, getNumberOrUndefined, urlFix, verify } from './core.mjs'
 import settings from './settings.mjs'
