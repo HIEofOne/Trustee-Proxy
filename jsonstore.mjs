@@ -44,9 +44,10 @@ export class JsonFileStore {
     console.log('loading json store')
     console.log(this.file)
     await this.checkFile()
-    const rawCache = await fs.promises.readFile(this.file, { encoding: 'utf8' })
     let cache
     try {
+      const rawCache = await fs.promises.readFile(this.file, { encoding: 'utf8' })
+      console.log(rawCache)
       cache = JSON.parse(rawCache)
       console.log('cache with data')
     } catch (e) {
