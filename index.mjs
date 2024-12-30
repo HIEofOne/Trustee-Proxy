@@ -149,9 +149,11 @@ app.get('/test', async(req, res) => {
       entities: Entities,
     }).initialize().then(() => {
       console.log("Data Source has been initialized!")
+      res.status(200).send('OK')
     })
     .catch((err) => {
         console.error("Error during Data Source initialization", err)
+        res.status(200).send('No')
     })
     // const preAuthorizedCode = 'e385e8fb-94de-4531-b475-e14541c2a158'
     // const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
@@ -193,7 +195,7 @@ app.get('/test', async(req, res) => {
     //   'credential': verifiableCredential.proof.jwt,
     // }
     // console.log(response)
-    res.status(200).send('OK')
+    
   } catch (e) {
     console.log(e)
     res.status(400).json({error: 'invalid_token'})
