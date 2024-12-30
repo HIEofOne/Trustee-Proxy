@@ -43,7 +43,7 @@ export class JsonFileStore {
   async load() {
     console.log('loading json store')
     console.log(this.file)
-    await this.checkFile()
+    // await this.checkFile()
     let cache
     try {
       const rawCache = await fs.promises.readFile(this.file, { encoding: 'utf8' })
