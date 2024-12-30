@@ -7,7 +7,6 @@ import objectPath from 'object-path'
 import PouchDB from 'pouchdb'
 import settings from './settings.mjs'
 import { v4 as uuidv4 } from 'uuid'
-
 import PouchDBFind from 'pouchdb-find'
 PouchDB.plugin(PouchDBFind)
 
