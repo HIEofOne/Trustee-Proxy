@@ -225,7 +225,6 @@ app.post('/credential', async(req, res) => {
                           const response = {
                             'credential': verifiableCredential.proof.jwt,
                           }
-                          console.log(response)
                           res.status(200).json(response)
                         } catch (e) {
                           console.log(e)
@@ -258,7 +257,6 @@ app.get('/credential_offer/:offer_reference', async(req, res) => {
   const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
   const result = await vc_db.find({selector: {'offer_reference': {$eq: req.params.offer_reference}}})
   if (result.docs.length > 0) {
-    console.log(result.docs[0])
     const response = {
       "credential_issuer": vcIssuerConf.credential_issuer,
       "credential_configuration_ids": [
@@ -548,7 +546,6 @@ app.get('/oidc_relay_connect', async(req, res) => {
             code_challenge_method: 'S256'
           }
         }
-        console.log(config)
         url = oidcclient.buildAuthorizationUrl(config, parameters)
         objectPath.set(doc, 'code_verifier', code_verifier)
         await db.put(doc)
@@ -602,7 +599,7 @@ app.get('/qr/:content', async(req, res) => {
     const content = 'openid-credential-offer://?' + req.params.content
     console.log(content)
     const qrStream = new PassThrough()
-    const result = await QRCode.toFileStream(qrStream, content, {
+    await QRCode.toFileStream(qrStream, content, {
       type: 'png',
       width: 200,
       errorCorrectionLevel: 'H'
@@ -646,7 +643,6 @@ app.get('/start', async(req, res) => {
 })
 
 app.post('/token', async(req, res) => {
-  console.log(req.body)
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
   if (req.body.grant_type === 'urn:ietf:params:oauth:grant-type:pre-authorized_code') {
@@ -681,7 +677,6 @@ app.post('/token', async(req, res) => {
               token_type: 'bearer',
               expires_in: 300
             }
-            console.log(response)
             res.status(200).json(response)
           } catch (e) {
             console.log(e)

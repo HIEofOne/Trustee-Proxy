@@ -16,19 +16,12 @@ import fs from 'fs'
 import { JsonFileStore } from './jsonstore.mjs'
 
 const INFURA_PROJECT_ID = process.env.INFURIA_API_KEY
-// const INFURA_PROJECT_ID = '62cfe5babc774c1aaffa9eac6dbbf47f'
-// const KMS_SECRET_KEY = 'cd198a03032e8d072066e3195b8e1e176e78b5cfbb378a5fc00ae4ded5c002e9'
 let KMS_SECRET_KEY = null
 if (fs.existsSync('/data/kms')) {
-// if (fs.existsSync('./kms')) {  
   KMS_SECRET_KEY = fs.readFileSync('/data/kms', 'utf8')
-  // KMS_SECRET_KEY = fs.readFileSync('./kms', 'utf8')
-  console.log(KMS_SECRET_KEY)
 } else {
   KMS_SECRET_KEY = await SecretBox.createSecretKey()
-  console.log(KMS_SECRET_KEY)
   fs.writeFileSync('/data/kms', KMS_SECRET_KEY)
-  // fs.writeFileSync('./kms', KMS_SECRET_KEY)
 }
 
 const jsonFileStore = await JsonFileStore.fromFile('/data/store.json')

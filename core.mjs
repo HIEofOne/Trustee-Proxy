@@ -3,12 +3,10 @@ dotenv.config()
 import axios from 'axios'
 import crypto from 'crypto'
 import * as jose from 'jose'
-import moment from 'moment'
 import objectPath from 'object-path'
 import PouchDB from 'pouchdb'
 import settings from './settings.mjs'
 import { v4 as uuidv4 } from 'uuid'
-import Docker from 'dockerode'
 
 import PouchDBFind from 'pouchdb-find'
 PouchDB.plugin(PouchDBFind)
@@ -88,156 +86,6 @@ function determinePath(endpoint, opts) {
     path = `/${trimBoth(path, '/')}`
   }
   return path
-}
-
-async function didkitIssue_alt(credentialSubject) {
-  // const opts = {headers: {'Content-Type': 'application/json'}}
-  const db = new PouchDB(urlFix(settings.couchdb_uri) + 'didkit', settings.couchdb_auth)
-  try {
-    const result = await db.get('did_doc')
-    console.log(credentialSubject)
-    const cmd = [
-      'vc-issue-credential',
-      '-j',
-      process.env.JWK,
-      '-v',
-      result.assertionMethod[0],
-      '-p',
-      'assertionMethod',
-    ]
-    const opts = {
-      Image: 'ghcr.io/spruceid/didkit-cli:latest',
-      Cmd: cmd,
-    }
-    const stdin = {
-      "@context": [
-        "https://www.w3.org/2018/credentials/v1",
-        "https://dir.hieofone.org"
-      ],
-      "id": "http://example.org/credentials/3731", //need to set
-      "type": ["VerifiableCredential", "ExampleNPICredential"],
-      "issuer": result.id,
-      "issuanceDate": moment().format('YYYY-MM-DDTHH:mm:ss.SSSZ'),
-      "credentialSubject": credentialSubject
-    }
-    try {
-      const a = await dockerRunWithStdIn(JSON.stringify(stdin), opts)
-      try {
-        return JSON.parse(a)
-      } catch (e) {
-        return a
-      }
-    } catch(e) {
-      console.log(e)
-    }
-  } catch (e) {
-    console.log(e)
-  }
-}
-
-async function didkitIssue(credentialSubject, type, issuer='') {
-  const opts = {headers: {'Content-Type': 'application/json'}}
-  const db = new PouchDB(urlFix(settings.couchdb_uri) + 'didkit', settings.couchdb_auth)
-  try {
-    const result = await db.get('did_doc')
-    if (issuer === '') {
-      issuer = result.id
-    }
-    const body = {
-      "credential": {
-        "@context": [
-          "https://www.w3.org/ns/credentials/v2",
-          {
-            "npi": "https://schema.org/usNPI",
-            "name": "https://schema.org/name",
-            "description": "https://schema.org/description",
-            "gender": "https://schema.org/gender",
-            "city": "https://schema.org/city",
-            "state": "https://schema.org/state",
-            "zip": "https://schema.org/PostalAddress",
-            "credentials": "https://schema.org/EducationalOccupationalCredential",
-            "specialty": "https://schema.org/MedicalSpecialty",
-            "medicalSchool": "https://schema.org/MedicalOrganization",
-            "residencies": "https://schema.org/MedicalOrganization",
-            "profilePhoto": "https://schema.org/image"
-          }
-        ],
-        // "id": "http://example.org/credentials/3731", //need to set
-        "type": ["VerifiableCredential", type],
-        "issuer": issuer,
-        "issuanceDate": moment().format('YYYY-MM-DDTHH:mm:ss.SSSZ'),
-        "credentialSubject": credentialSubject
-      },
-      "options": {
-      }
-    }
-    try {
-      const res = await axios.post('http://didkit:3000/credentials/issue', body, opts)
-      console.log(res.data)
-      return res.data
-    } catch (e) {
-      console.log(e)
-      return e
-    }
-  } catch (e) {
-    console.log(e)
-  }
-}
-
-async function didkitVerify(vc) {
-  const opts = {headers: {'Content-Type': 'application/json'}}
-  const db = new PouchDB(urlFix(settings.couchdb_uri) + 'didkit', settings.couchdb_auth)
-  try {
-    const result = await db.get('did_doc')
-    const body = {
-      "verifiableCredential": vc,
-      "options": {}
-    }
-    try {
-      const res = await axios.post('http://didkit:3000/credentials/verify', body, opts)
-      return res.data
-    } catch (e) {
-      console.log(e.response.data)
-      return e
-    }
-  } catch (e) {
-    console.log(e)
-  }
-}
-
-async function dockerRunWithStdIn(stdin, options) {
-  const docker = new Docker()
-  const container = await docker.createContainer(Object.assign({
-    OpenStdin: true,
-    AttachStdin: true,
-    AttachStdout: true,
-    AttachStderr: true,
-    StdinOnce: true
-  }, options))
-  const stream = await container.attach({
-    hijack: true,
-    stderr: true,
-    stdin: true,
-    stdout: true,
-    stream: true
-  })
-  const stdout = new Promise((resolve) => {
-    stream.on('data', (data) => {
-      // The first 8 bytes are used to define the response header.
-      // Please refer to https://docs.docker.com/engine/api/v1.37/#operation/ContainerAttach
-      const response = data && data.slice(8).toString()
-      console.log(data)
-      console.log(response)
-      resolve(response)
-    })
-  })
-  console.log(stdin)
-  stream.write(stdin)
-  await container.start()
-  stream.end()
-  await container.wait()
-  container.remove()
-  return stdout
 }
 
 function getBasePath() {
@@ -509,4 +357,4 @@ async function verify(jwt) {
 }
 
 
-export { createJWT, createSigner, couchdbConfig, couchdbDatabase, couchdbInstall, determinePath, didkitIssue, didkitVerify, equals, extractComponent, extractHeader, getKeys, getNumberOrUndefined, getPIN, signatureHeader, sleep, urlFix, verify }
+export { createJWT, createSigner, couchdbConfig, couchdbDatabase, couchdbInstall, determinePath, equals, extractComponent, extractHeader, getKeys, getNumberOrUndefined, getPIN, signatureHeader, sleep, urlFix, verify }
