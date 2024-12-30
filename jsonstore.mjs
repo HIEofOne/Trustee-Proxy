@@ -20,6 +20,7 @@ export class JsonFileStore {
   constructor(file) {
     this.file = file
     this.notifyUpdate = async(oldState, newState) => {
+      console.log(oldState)
       console.log(newState)
       if (newState !== '') {
         await this.save(newState)
@@ -40,11 +41,13 @@ export class JsonFileStore {
   }
 
   async load() {
+    console.log('loading json store')
     await this.checkFile()
     const rawCache = await fs.promises.readFile(this.file, { encoding: 'utf8' })
     let cache
     try {
       cache = JSON.parse(rawCache)
+      console.log('cache with data')
     } catch (e) {
       cache = {}
     }
@@ -66,6 +69,7 @@ export class JsonFileStore {
       privateKeys: {},
       ...cache,
     })
+    console.log(this)
     return this
   }
 
