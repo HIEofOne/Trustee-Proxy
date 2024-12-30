@@ -38,11 +38,11 @@ export const agent = createAgent({
     new KeyManager({
       store: new KeyStoreJson(jsonFileStore),
       kms: {
-        local: new KeyManagementSystem(new PrivateKeyStoreJson(dbConnection, new SecretBox(KMS_SECRET_KEY))),
+        local: new KeyManagementSystem(new PrivateKeyStoreJson(jsonFileStore, new SecretBox(KMS_SECRET_KEY))),
       }
     }),
     new DIDManager({
-      store: new DIDStoreJson(dbConnection),
+      store: new DIDStoreJson(jsonFileStore),
       defaultProvider: 'did:key',
       providers: {
         'did:ethr:sepolia': new EthrDIDProvider({
