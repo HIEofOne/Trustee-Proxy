@@ -6,7 +6,7 @@ RUN npm ci --only=production
 COPY . .
 
 FROM node:alpine
-LABEL Maintainer Michael Shihjay Chen <shihjay2@gmail.com>
+LABEL Maintainer="Michael Shihjay Chen <shihjay2@gmail.com>"
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/*.mjs ./
 COPY --from=builder /usr/src/app/node_modules ./node_modules
