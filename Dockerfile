@@ -6,8 +6,6 @@ RUN npm ci --only=production
 COPY . .
 
 FROM node:alpine
-RUN apk update \
-    && apk add --update sqlite
 LABEL Maintainer Michael Shihjay Chen <shihjay2@gmail.com>
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/*.mjs ./

@@ -11,9 +11,9 @@ import { DIDResolverPlugin } from '@veramo/did-resolver'
 import { Resolver } from 'did-resolver'
 import { getResolver as ethrDidResolver } from 'ethr-did-resolver'
 import { getResolver as webDidResolver } from 'web-did-resolver'
-import { Entities, KeyStore, DIDStore, PrivateKeyStore, migrations } from '@veramo/data-store'
-import { DataSource } from 'typeorm'
+import { DataStoreJson, KeyStoreJson, DIDStoreJson, PrivateKeyStoreJson } from '@veramo/data-store-json'
 import fs from 'fs'
+import { JsonFileStore } from './jsonstore.mjs'
 
 const INFURA_PROJECT_ID = process.env.INFURIA_API_KEY
 // const INFURA_PROJECT_ID = '62cfe5babc774c1aaffa9eac6dbbf47f'
@@ -31,27 +31,18 @@ if (fs.existsSync('/data/kms')) {
   // fs.writeFileSync('./kms', KMS_SECRET_KEY)
 }
 
-const dbConnection = new DataSource({
-  type: 'sqlite',
-  database: '/data/database.sqlite',
-  // database: './database.sqlite',
-  synchronize: false,
-  migrations,
-  migrationsRun: true,
-  logging: ['error', 'info', 'warn'],
-  entities: Entities,
-}).initialize()
+const jsonFileStore = await JsonFileStore.fromFile('/data/store.json')
 
 export const agent = createAgent({
   plugins: [
     new KeyManager({
-      store: new KeyStore(dbConnection),
+      store: new KeyStoreJson(jsonFileStore),
       kms: {
-        local: new KeyManagementSystem(new PrivateKeyStore(dbConnection, new SecretBox(KMS_SECRET_KEY))),
+        local: new KeyManagementSystem(new PrivateKeyStoreJson(dbConnection, new SecretBox(KMS_SECRET_KEY))),
       }
     }),
     new DIDManager({
-      store: new DIDStore(dbConnection),
+      store: new DIDStoreJson(dbConnection),
       defaultProvider: 'did:key',
       providers: {
         'did:ethr:sepolia': new EthrDIDProvider({
@@ -70,6 +61,7 @@ export const agent = createAgent({
         ...webDidResolver(),
       })
     }),
+    new DataStoreJson(jsonFileStore),
     new CredentialPlugin()
   ],
 })

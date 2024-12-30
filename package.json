@@ -13,8 +13,9 @@
   "dependencies": {
     "@spruceid/ssx-server": "^2.0.0",
     "@veramo/core": "^6.0.0",
+    "@veramo/core-types": "^6.0.0",
     "@veramo/credential-w3c": "^6.0.0",
-    "@veramo/data-store": "^6.0.0",
+    "@veramo/data-store-json": "^6.0.0",
     "@veramo/did-manager": "^6.0.0",
     "@veramo/did-provider-ethr": "^6.0.0",
     "@veramo/did-provider-key": "^6.0.0",
@@ -41,8 +42,6 @@
     "pouchdb": "^8.0.0",
     "pouchdb-find": "^8.0.0",
     "qrcode": "^1.5.3",
-    "sqlite3": "^5.1.7",
-    "typeorm": "^0.3.20",
     "uuid": "^9.0.0",
     "web-did-resolver": "^2.0.27"
   }
