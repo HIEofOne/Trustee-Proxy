@@ -2,7 +2,7 @@ FROM node:slim AS builder
 RUN apt-get update || : && apt-get install -y python3 build-essential
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 COPY . .
 
 FROM node:alpine
