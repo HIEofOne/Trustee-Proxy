@@ -16,6 +16,8 @@ import { DataSource } from 'typeorm'
 import fs from 'fs'
 
 const INFURA_PROJECT_ID = process.env.INFURIA_API_KEY
+// const INFURA_PROJECT_ID = '62cfe5babc774c1aaffa9eac6dbbf47f'
+// const KMS_SECRET_KEY = 'cd198a03032e8d072066e3195b8e1e176e78b5cfbb378a5fc00ae4ded5c002e9'
 let KMS_SECRET_KEY = null
 if (fs.existsSync('/data/kms')) {
 // if (fs.existsSync('./kms')) {  
@@ -32,17 +34,13 @@ if (fs.existsSync('/data/kms')) {
 const dbConnection = new DataSource({
   type: 'sqlite',
   database: '/data/database.sqlite',
+  // database: './database.sqlite',
   synchronize: false,
   migrations,
   migrationsRun: true,
   logging: ['error', 'info', 'warn'],
   entities: Entities,
-}).initialize().then(() => {
-  console.log("Data Source has been initialized!")
-})
-.catch((err) => {
-  console.error("Error during Data Source initialization", err)
-})
+}).initialize()
 
 export const agent = createAgent({
   plugins: [

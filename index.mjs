@@ -21,6 +21,7 @@ import QRCode from 'qrcode'
 import { PassThrough } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
 import { SiweMessage } from 'siwe'
+import { agent } from './veramo.mjs'
 
 import { createJWT, couchdbDatabase, couchdbInstall, didkitIssue, didkitVerify, determinePath, getNumberOrUndefined, urlFix, verify } from './core.mjs'
 import settings from './settings.mjs'
@@ -139,7 +140,28 @@ app.get('/test', async(req, res) => {
     const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
     const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
     const result = await vc_db.get(preAuthorizedCode)
-    const { agent } = await import('./veramo.mjs')
+    // const result = {
+    //   _id: 'e385e8fb-94de-4531-b475-e14541c2a158',
+    //   _rev: '1-c03e3e8004ccc5905353374dda555171',
+    //   credential_subject: {
+    //     npi: '1023005410',
+    //     name: 'Michael Chen, MD',
+    //     description: 'District Medical Director for One Medical; Consultant for NOSH ChartingSystem',
+    //     gender: 'M',
+    //     city: 'Portland',
+    //     state: 'OR',
+    //     zip: '97204',
+    //     credentials: 'MD',
+    //     specialty: 'Family Medicine',
+    //     medicalSchool: 'University of Missouri-Columbia School of Medicine',
+    //     residencies: [ 'Hennepin Healthcare' ],
+    //     profilePhoto: 'https://doximity-res.cloudinary.com/image/upload/f_auto,q_auto,t_profile_photo_320x320/mr5pmcnxghvkew69oz5v.jpg'
+    //   },
+    //   offer_reference: '51f19b93-d581-45e9-89f6-41335a7c4576',
+    //   credential_type: 'NPICredential',
+    //   tx_code: '7205'
+    // }
+    // const { agent } = await import('./veramo.mjs')
     const identifier = await agent.didManagerGetOrCreate({ alias: 'default' })
     const verifiableCredential = await agent.createVerifiableCredential({
       credential: {
