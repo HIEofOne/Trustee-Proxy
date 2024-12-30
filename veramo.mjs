@@ -37,7 +37,12 @@ const dbConnection = new DataSource({
   migrationsRun: true,
   logging: ['error', 'info', 'warn'],
   entities: Entities,
-}).initialize()
+}).initialize().then(() => {
+  console.log("Data Source has been initialized!")
+})
+.catch((err) => {
+  console.error("Error during Data Source initialization", err)
+})
 
 export const agent = createAgent({
   plugins: [
