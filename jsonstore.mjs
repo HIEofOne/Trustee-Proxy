@@ -1,5 +1,3 @@
-// noinspection ES6PreferShortImport
-
 import * as fs from 'fs'
 
 /**
@@ -20,11 +18,7 @@ export class JsonFileStore {
   constructor(file) {
     this.file = file
     this.notifyUpdate = async(oldState, newState) => {
-      console.log(oldState)
-      console.log(newState)
-      if (newState !== '') {
-        await this.save(newState)
-      }
+      await this.save(newState)
     }
     this.dids = {}
     this.keys = {}
@@ -41,15 +35,10 @@ export class JsonFileStore {
   }
 
   async load() {
-    console.log('loading json store')
-    console.log(this.file)
-    // await this.checkFile()
     let cache
     try {
       const rawCache = await fs.promises.readFile(this.file, { encoding: 'utf8' })
-      console.log(rawCache)
       cache = JSON.parse(rawCache)
-      console.log('cache with data')
     } catch (e) {
       console.log(e)
       cache = {}
@@ -72,7 +61,6 @@ export class JsonFileStore {
       privateKeys: {},
       ...cache,
     })
-    console.log(this)
     return this
   }
 
@@ -80,10 +68,5 @@ export class JsonFileStore {
     await fs.promises.writeFile(this.file, JSON.stringify(newState), {
       encoding: 'utf8',
     })
-  }
-
-  async checkFile() {
-    const file = await fs.promises.open(this.file, 'w+')
-    await file.close()
   }
 }
