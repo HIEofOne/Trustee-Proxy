@@ -255,7 +255,7 @@ app.post('/credential', async(req, res) => {
 app.get('/credential_offer/:offer_reference', async(req, res) => {
   const opts = JSON.parse(JSON.stringify(settings.couchdb_auth))
   const vc_db = new PouchDB(urlFix(settings.couchdb_uri) + 'vc', opts)
-  const result = await vc_db.find({selector: {'offer_reference': {$eq: req.params.offer_reference}}, limit: 0})
+  const result = await vc_db.find({selector: {'offer_reference': {$eq: req.params.offer_reference}}, limit: 100})
   if (result.docs.length > 0) {
     const response = {
       "credential_issuer": vcIssuerConf.credential_issuer,
