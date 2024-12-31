@@ -47,6 +47,7 @@
   "overrides": {
     "uri-js": "npm:uri-js-replace",
     "tr46": "^5.0.0",
-    "whatwg-url": "^14.0.0"
+    "whatwg-url": "^14.0.0",
+    "react-native-securerandom": "^1.0.1"
   }
 }
