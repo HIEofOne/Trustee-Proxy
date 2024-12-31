@@ -256,7 +256,7 @@ async function getAllKeys() {
   let publicKey = ''
   const db = new PouchDB((settings.couchdb_uri + '/keys'), settings.couchdb_auth)
   const result = await db.find({
-    selector: {_id: {"$gte": null}}, limit: 0
+    selector: {_id: {"$gte": null}}, limit: 100
   })
   for (const a in result.docs) {
     keys.push(result.docs[a].publicKey)
@@ -270,7 +270,7 @@ async function getAllKeys() {
 async function getKeys() {
   const db = new PouchDB(urlFix(settings.couchdb_uri) + 'keys', settings.couchdb_auth)
   const result = await db.find({
-    selector: {_id: {"$gte": null}, privateKey: {"$gte": null}}, limit: 0
+    selector: {_id: {"$gte": null}, privateKey: {"$gte": null}}, limit: 100
   })
   return result.docs
 }
