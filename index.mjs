@@ -20,6 +20,7 @@ import { PassThrough } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
 import { SiweMessage } from 'siwe'
 import { agent } from './veramo.mjs'
+import { createJWK } from '@veramo/utils'
 
 import { createJWT, couchdbDatabase, couchdbInstall, getNumberOrUndefined, urlFix, verify } from './core.mjs'
 import settings from './settings.mjs'
@@ -381,11 +382,14 @@ app.get('/doximity_redirect', async(req, res) => {
   }
 })
 
-app.get('/jwks', (req, res) => {
-  const ret = {
-    "keys": JSON.parse(process.env.DIDKIT_HTTP_ISSUER_KEYS)
+app.get('/jwks', async(req, res) => {
+  const keys = []
+  const identifier = await agent.didManagerGetOrCreate({ alias: 'default' });
+  for (const key of identifier.keys) {
+    const jwk = createJWK("Ed25519", key.publicKeyHex);
+    keys.push(jwk)
   }
-  res.status(200).json(ret)
+  res.status(200).json({"keys": keys});
 })
 
 app.post('/oidc_relay', async(req, res) => {
