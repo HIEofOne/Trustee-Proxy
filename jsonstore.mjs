@@ -36,11 +36,15 @@ export class JsonFileStore {
 
   async load() {
     let cache
-    try {
-      const rawCache = await fs.promises.readFile(this.file, { encoding: 'utf8' })
-      cache = JSON.parse(rawCache)
-    } catch (e) {
-      console.log(e)
+    if (fs.existsSync(this.file)) {
+      try {
+        const rawCache = await fs.promises.readFile(this.file, { encoding: 'utf8' })
+        cache = JSON.parse(rawCache)
+      } catch (e) {
+        console.log(e)
+        cache = {}
+      }
+    } else {
       cache = {}
     }
     ; ({
