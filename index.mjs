@@ -456,6 +456,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
     let scope = ''
     let base_url = ''
     let config = null
+    let openid = 'openid'
     if (doc.type === 'epic' || doc.type === 'cerner') {
       if (doc.type === 'epic') {
         if (process.env.OPENEPIC_CLIENT_ID === null) {
@@ -471,6 +472,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
           res.redirect(doc.response_uri)
         }
         client_id = process.env.CERNER_CLIENT_ID
+        openid = 'smart'
       }
       if (!objectPath.has(doc, 'fhir_url')) {
         objectPath.set(doc, 'error', 'fhir_url is not set')
@@ -488,7 +490,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
       scope = 'openid patient/*.read user/*.* profile launch launch/patient offline_access online_access'
       try {
         config = await oidcclient.discovery(
-          new URL(doc.fhir_url + '.well-known/openid-configuration'),
+          new URL(doc.fhir_url + '.well-known/' + openid + '-configuration'),
           client_id,
           '',
           oidcclient.None()
