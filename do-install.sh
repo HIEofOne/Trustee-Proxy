@@ -16,6 +16,7 @@ if [ -d "${HOME}/.nvm/.git" ]; then
     read -e -p "Enter your Doximity Client Secret: " -i "" DOXIMITY_CLIENT_SECRET
     read -e -p "Enter your OpenEPIC Client ID: " -i "" OPENEPIC_CLIENT_ID
     read -e -p "Enter your OpenEPIC Sandbox Client ID: " -i "" OPENEPIC_SANDBOX_CLIENT_ID
+    read -e -p "Enter your Cerner Client ID: " -i "" CERNER_CLIENT_ID
     read -e -p "Enter your CMS Bluebutton Sandbox Client ID: " -i "" CMS_BLUEBUTTON_SANDBOX_CLIENT_ID 
     read -e -p "Enter your CMS Bluebutton Sandbox Client Secret: " -i "" CMS_BLUEBUTTON_SANDBOX_CLIENT_SECRET
     read -e -p "Enter your CMS Bluebutton Client ID: " -i "" CMS_BLUEBUTTON_CLIENT_ID
@@ -31,6 +32,7 @@ if [ -d "${HOME}/.nvm/.git" ]; then
     sed -i '/^DOXIMITY_CLIENT_SECRET=/s/=.*/='"$DOXIMITY_CLIENT_SECRET"'/' ./.env
     sed -i '/^OPENEPIC_CLIENT_ID=/s/=.*/='"$OPENEPIC_CLIENT_ID"'/' ./.env
     sed -i '/^OPENEPIC_SANDBOX_CLIENT_ID=/s/=.*/='"$OPENEPIC_SANDBOX_CLIENT_ID"'/' ./.env
+    sed -i '/^CERNER_CLIENT_ID=/s/=.*/='"$CERNER_CLIENT_ID"'/' ./.env
     sed -i '/^CMS_BLUEBUTTON_SANDBOX_CLIENT_ID=/s/=.*/='"$CMS_BLUEBUTTON_SANDBOX_CLIENT_ID"'/' ./.env
     sed -i '/^CMS_BLUEBUTTON_SANDBOX_CLIENT_SECRET=/s/=.*/='"$CMS_BLUEBUTTON_SANDBOX_CLIENT_SECRET"'/' ./.env
     sed -i '/^CMS_BLUEBUTTON_CLIENT_ID=/s/=.*/='"$CMS_BLUEBUTTON_CLIENT_ID"'/' ./.env

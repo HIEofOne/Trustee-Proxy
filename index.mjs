@@ -456,18 +456,27 @@ app.get('/oidc_relay_connect', async(req, res) => {
     let scope = ''
     let base_url = ''
     let config = null
-    if (doc.type === 'epic') {
-      if (process.env.OPENEPIC_CLIENT_ID === null) {
-        objectPath.set(doc, 'error', 'OpenEpic Client ID is not set')
-        await db.put(doc)
-        res.redirect(doc.response_uri)
+    if (doc.type === 'epic' || doc.type === 'cerner') {
+      if (doc.type === 'epic') {
+        if (process.env.OPENEPIC_CLIENT_ID === null) {
+          objectPath.set(doc, 'error', 'OpenEpic Client ID is not set')
+          await db.put(doc)
+          res.redirect(doc.response_uri)
+        }
+        client_id = process.env.OPENEPIC_CLIENT_ID
+      } else {
+        if (process.env.CERNER_CLIENT_ID === null) {
+          objectPath.set(doc, 'error', 'Cerner Client ID is not set')
+          await db.put(doc)
+          res.redirect(doc.response_uri)
+        }
+        client_id = process.env.CERNER_CLIENT_ID
       }
       if (!objectPath.has(doc, 'fhir_url')) {
         objectPath.set(doc, 'error', 'fhir_url is not set')
         await db.put(doc)
         res.redirect(doc.response_uri)
       }
-      client_id = process.env.OPENEPIC_CLIENT_ID
       if (doc.fhir_url === 'https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/') {
         if (process.env.OPENEPIC_SANDBOX_CLIENT_ID === null) {
           objectPath.set(doc, 'error', 'OpenEpic Sandbox Client ID is not set')
@@ -532,7 +541,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
         const code_challenge = await oidcclient.calculatePKCECodeChallenge(code_verifier)
         let url = null
         let parameters = {}
-        if (doc.type === 'epic') {
+        if (doc.type === 'epic' || doc.type === 'cerner') {
           parameters = {
             redirect_uri: urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
             scope: scope,
