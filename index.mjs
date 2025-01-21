@@ -496,6 +496,8 @@ app.get('/oidc_relay_connect', async(req, res) => {
           oidcclient.None()
         )
       } catch (e) {
+        console.log(openid)
+        console.log(e)
         objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
         await db.put(doc)
         res.status(200).send('Not authorized - Problem accessing OpenID Configuration')
