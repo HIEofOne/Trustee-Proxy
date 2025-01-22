@@ -561,23 +561,18 @@ app.get('/oidc_relay_connect', async(req, res) => {
         const code_verifier = oidcclient.randomPKCECodeVerifier()
         const code_challenge = await oidcclient.calculatePKCECodeChallenge(code_verifier)
         let url = null
-        let parameters = {}
+        let parameters = {
+          redirect_uri: urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
+          scope: scope,
+          code_challenge: code_challenge,
+          state: req.query.proxystate,
+          code_challenge_method: 'S256'
+        }
         if (doc.type === 'epic' || doc.type === 'cerner') {
-          parameters = {
-            redirect_uri: urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
-            scope: scope,
-            code_challenge: code_challenge,
-            state: req.query.proxystate,
-            aud: doc.fhir_url,
-            code_challenge_method: 'S256'
-          }
-        } else {
-          parameters = {
-            redirect_uri: urlFix(process.env.DOMAIN) + 'oidc_relay_connect',
-            scope: scope,
-            code_challenge: code_challenge,
-            state: req.query.proxystate,
-            code_challenge_method: 'S256'
+          objectPath.set(parameters, 'aud', doc.fhir_url)
+          if (doc.type === 'cerner') {
+            const launch = await nanoid()
+            objectPath.set(parameters, 'launch', launch)
           }
         }
         url = oidcclient.buildAuthorizationUrl(config, parameters)
