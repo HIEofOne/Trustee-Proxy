@@ -610,6 +610,12 @@ app.get('/oidc_relay_connect', async(req, res) => {
         objectPath.set(doc, 'access_token', tokenSet.access_token)
         if (doc.type === 'epic') {
           objectPath.set(doc, 'patient_token', tokenSet.patient)
+        } else if (doc.type === 'cerner') {
+          const { profile } = tokenSet.claims()
+          const profile_url = new URL(profile)
+          const profile_parts = profile_url.pathname.split('/')
+          const patient_id = profile_parts[profile_parts.length - 1]
+          objectPath.set(doc, 'patient_token', patient_id)
         } else {
           objectPath.set(doc, 'patient_token', tokenSet.patient_token)
           objectPath.set(doc, 'refresh_token', tokenSet.refresh_token)
