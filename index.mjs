@@ -21,6 +21,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { SiweMessage } from 'siwe'
 import { agent } from './veramo.mjs'
 import { createJWK } from '@veramo/utils'
+import util from 'util'
 
 import { createJWT, couchdbDatabase, couchdbInstall, getNumberOrUndefined, urlFix, verify } from './core.mjs'
 import settings from './settings.mjs'
