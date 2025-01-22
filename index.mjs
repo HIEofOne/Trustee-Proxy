@@ -143,7 +143,7 @@ app.post('/ssx', async(req, res) => {
     console.log(status)
     res.status(200).send('OK')
   } catch (e) {
-    console.log(e)
+    console.log(util.inspect(e, {showHidden: true, depth: null, colors: true}))
     res.status(500).send(e)
   }
 })
@@ -229,7 +229,7 @@ app.post('/credential', async(req, res) => {
                           }
                           res.status(200).json(response)
                         } catch (e) {
-                          console.log(e)
+                          console.log(util.inspect(e, {showHidden: true, depth: null, colors: true}))
                           res.status(400).json({error: 'invalid_token'})
                         }
                       }
@@ -494,7 +494,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
           const { data } = await axios.get(doc.fhir_url + '.well-known/smart-configuration', opts)
           const url = new URL(data.management_endpoint)
           const pathParts = url.pathname.split('/')
-          const issuer_arr = [url.protocol + '/', url.hostname, pathParts[0], pathParts[1], 'oidc', 'idsps', pathParts[1] + '-ch', '']
+          const issuer_arr = [url.protocol + '/', url.hostname, pathParts[1], pathParts[2], 'oidc', 'idsps', pathParts[2] + '-ch', '']
           objectPath.set(data, 'issuer', issuer_arr.join('/'))
           config = new oidcclient.Configuration(
             data,
@@ -503,7 +503,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
             oidcclient.None()
           )
         } catch (e) {
-          console.log(e)
+          console.log(util.inspect(e, {showHidden: true, depth: null, colors: true}))
           objectPath.set(doc, 'error', 'Problem processing OpenID Configuration')
           await db.put(doc)
           res.status(200).send('Not authorized - Problem processing OpenID Configuration')
@@ -518,7 +518,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
             oidcclient.None()
           )
         } catch (e) {
-          console.log(e)
+          console.log(util.inspect(e, {showHidden: true, depth: null, colors: true}))
           objectPath.set(doc, 'error', 'Problem accessing OpenID Configuration')
           await db.put(doc)
           res.status(200).send('Not authorized - Problem accessing OpenID Configuration')
@@ -713,7 +713,7 @@ app.post('/token', async(req, res) => {
             }
             res.status(200).json(response)
           } catch (e) {
-            console.log(e)
+            console.log(util.inspect(e, {showHidden: true, depth: null, colors: true}))
             res.status(400).json({error: 'invalid_grant'})
           }
         }
