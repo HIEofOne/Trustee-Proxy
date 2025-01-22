@@ -613,7 +613,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
         await db.put(doc)
         res.redirect(doc.response_uri)
       } catch (e) {
-        console.log(JSON.stringify(e))
+        console.log(util.inspect(e, {showHidden: true, depth: null, colors: true}))
         res.status(200).json(e)
       }
     }
