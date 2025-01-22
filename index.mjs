@@ -489,9 +489,10 @@ app.get('/oidc_relay_connect', async(req, res) => {
       if (doc.type === 'cerner') {
         try {
           const opts = {headers: {Accept: 'application/json'}}
-          const metadata = await axios.get(doc.fhir_url + '.well-known/smart-configuration', opts)
+          const { data } = await axios.get(doc.fhir_url + '.well-known/smart-configuration', opts)
+          objectPath.set(data, 'issuer', doc.fhir_url)
           config = new oidcclient.Configuration(
-            metadata.data,
+            data,
             client_id,
             '',
             oidcclient.None()
