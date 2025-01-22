@@ -492,7 +492,10 @@ app.get('/oidc_relay_connect', async(req, res) => {
         try {
           const opts = {headers: {Accept: 'application/json'}}
           const { data } = await axios.get(doc.fhir_url + '.well-known/smart-configuration', opts)
-          objectPath.set(data, 'issuer', doc.fhir_url)
+          const url = new URL(data.management_endpoint)
+          const pathParts = url.pathname.split('/')
+          const issuer_arr = [url.protocol + '/', url.hostname, pathParts[0], pathParts[1], 'oidc', 'idsps', pathParts[1] + '-ch', '']
+          objectPath.set(data, 'issuer', issuer_arr.join('/'))
           config = new oidcclient.Configuration(
             data,
             client_id,
