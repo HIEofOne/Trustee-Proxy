@@ -487,6 +487,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
       }
       scope = 'openid patient/*.read user/*.* profile launch launch/patient offline_access online_access'
       if (doc.type === 'cerner') {
+        scope = 'openid patient/*.read user/*.* profile offline_access online_access'
         try {
           const opts = {headers: {Accept: 'application/json'}}
           const { data } = await axios.get(doc.fhir_url + '.well-known/smart-configuration', opts)
@@ -570,10 +571,10 @@ app.get('/oidc_relay_connect', async(req, res) => {
         }
         if (doc.type === 'epic' || doc.type === 'cerner') {
           objectPath.set(parameters, 'aud', doc.fhir_url)
-          if (doc.type === 'cerner') {
-            const launch = await nanoid()
-            objectPath.set(parameters, 'launch', launch)
-          }
+          // if (doc.type === 'cerner') {
+          //   const launch = await nanoid()
+          //   objectPath.set(parameters, 'launch', launch)
+          // }
         }
         url = oidcclient.buildAuthorizationUrl(config, parameters)
         objectPath.set(doc, 'code_verifier', code_verifier)
