@@ -592,7 +592,7 @@ app.get('/oidc_relay_connect', async(req, res) => {
       }
       try {
         let tokenSet = null
-        if (doc.type === 'epic') {
+        if (doc.type === 'epic' || doc.type === 'cerner') {
           tokenSet = await oidcclient.authorizationCodeGrant(
             config,
             new URL(req.protocol + '://' + req.get('host') + req.originalUrl),
