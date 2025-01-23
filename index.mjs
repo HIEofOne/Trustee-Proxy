@@ -488,7 +488,6 @@ app.get('/oidc_relay_connect', async(req, res) => {
       }
       scope = 'openid patient/*.read user/*.* profile launch launch/patient offline_access online_access'
       if (doc.type === 'cerner') {
-        scope = 'openid patient/*.read user/*.* profile offline_access online_access'
         try {
           const opts = {headers: {Accept: 'application/json'}}
           const { data } = await axios.get(doc.fhir_url + '.well-known/smart-configuration', opts)
@@ -502,6 +501,9 @@ app.get('/oidc_relay_connect', async(req, res) => {
             '',
             oidcclient.None()
           )
+          const scopes_exclude = ['launch', 'launch/patient']
+          const scopes_arr = data.scopes_supported.filter(item => !scopes_exclude.includes(item))
+          scope = scopes_arr.join(' ')
         } catch (e) {
           console.log(util.inspect(e, {showHidden: true, depth: null, colors: true}))
           objectPath.set(doc, 'error', 'Problem processing OpenID Configuration')
